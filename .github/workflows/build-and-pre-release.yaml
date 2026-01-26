@@ -72,42 +72,22 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v5
 
-      - name: Extract project version and generate incremental version
+      - name: Extract project version from version.txt
         id: version
         run: |
-          # Read base version from version.txt instead of parsing YAML
+          # Read full version from version.txt
           if [ ! -f version.txt ]; then
             echo "version.txt not found" >&2
             exit 1
           fi
-          BASE_VERSION=$(sed -n '1{s/\r$//;p}' version.txt | tr -d ' ') 
-          if [ -z "$BASE_VERSION" ]; then
+          VERSION=$(sed -n '1{s/\r$//;p}' version.txt | tr -d ' ') 
+          if [ -z "$VERSION" ]; then
             echo "version.txt is empty" >&2
             exit 1
           fi
-          echo "Base version (from version.txt): $BASE_VERSION"
-
-          # Fetch tags
-          git fetch --tags || true
-
-          LATEST_TAG=$(git tag -l "$BASE_VERSION.*" | sort -V | tail -1 || echo "")
-
-          LATEST_VERSION="$LATEST_TAG"
-
-          if [ -z "$LATEST_VERSION" ]; then
-            INCREMENTAL_VERSION="${BASE_VERSION}.0"
-          else
-            CURRENT_INCREMENT=$(echo "$LATEST_VERSION" | sed "s/${BASE_VERSION}\.//")
-            NEXT_INCREMENT=$((CURRENT_INCREMENT + 1))
-            INCREMENTAL_VERSION="${BASE_VERSION}.${NEXT_INCREMENT}"
-          fi
-
-          TAG="$INCREMENTAL_VERSION"
-          echo "version=$INCREMENTAL_VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "Base version: $BASE_VERSION"
-          echo "Full version: $INCREMENTAL_VERSION"
-          echo "Release tag: $TAG"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -116,14 +96,14 @@ jobs:
         run: |
           set -euo pipefail
           VERSION='${{ steps.version.outputs.version }}'
-          BASE_MAJOR_MINOR="${VERSION%.*}"   # e.g. 2025.2 from 2025.2.0
-          INCREMENT="${VERSION##*.}"        # last segment
+          BASE_MAJOR_MINOR="${VERSION%.*}"   # e.g. 2026.1 from 2026.1.1
+          INCREMENT=".${VERSION##*.}"        # e.g. .1 from 2026.1.1
           echo "Searching for version: $VERSION (base: $BASE_MAJOR_MINOR, increment: $INCREMENT)"
           if [ ! -f CHANGELOG.md ]; then
             echo "summary=# $VERSION" >> $GITHUB_OUTPUT
             exit 0
           fi
-          # Use literal matching instead of regex for better reliability
+          # Find changelog entry matching major.minor, then increment
           awk -v base_ver="$BASE_MAJOR_MINOR" -v inc="$INCREMENT" -v ver="$VERSION" '
           BEGIN{foundMM=0;foundInc=0} 
           {
@@ -139,7 +119,7 @@ jobs:
               exit
             }
             # Match increment header exactly  
-            if (foundMM && $0 == "## ." inc) {
+            if (foundMM && $0 == "## " inc) {
               foundInc=1
               print "Found increment header: " $0 > "/dev/stderr"
               next
@@ -165,7 +145,7 @@ jobs:
             # Create formatted summary with version header and preserve list structure
             echo "# $VERSION" > /tmp/formatted_summary.txt
             cat /tmp/summary.txt >> /tmp/formatted_summary.txt
-            # Create proper JSON with \r\n sequences using printf to generate actual escape sequences
+            # Create proper JSON with \r\n sequences
             SUMMARY=""
             first_line=true
             while IFS= read -r line; do
@@ -174,11 +154,10 @@ jobs:
                 SUMMARY="$escaped_line"
                 first_line=false
               else
-                # Use printf to create actual \r\n escape sequences
                 SUMMARY="$SUMMARY$(printf '\r\n')$escaped_line"
               fi
             done < /tmp/formatted_summary.txt
-            echo "Summary extracted with header:"
+            echo "Summary extracted:"
             cat /tmp/formatted_summary.txt
             echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
           else
