@@ -89,7 +89,8 @@ ota:
 i2c:
   sda: GPIO21
   scl: GPIO22
-  scan: true
+  scan: false
+  frequency: 400kHz
 
 spi:
   clk_pin: GPIO18
@@ -241,7 +242,7 @@ display:
       CO2Level level = get_co2_level(co2);
       Color sc = level.color;
       const char* status_text = get_co2_level_text(level.type);
-      int t = millis();
+      // int t = millis();
 
       static uint8_t frame = 0;
       
@@ -252,7 +253,7 @@ display:
       it.print(120, 3, id(roboto_bold_25), sc, TextAlign::TOP_CENTER, status_text);
       
       // === MAIN CO2 VALUE ===
-      int depth = (t / 200) % 2;
+      int depth = frame % 2;
       it.printf(120 - depth, 22, id(roboto_bold_60), sc, 
         TextAlign::TOP_CENTER, "%.0f", co2);
       
@@ -262,7 +263,7 @@ display:
       int segments = 18;
       int filled = (int)((segments * 4) * pct);
       if (filled > 72) filled = 72;
-      int anim_frame = (t / 150) % 4;
+      int anim_frame = frame % 4;
       
       switch(filled) {
         case 0: it.image(7, 97, anim_frame == 0 ? id(bar_00_0) : anim_frame == 1 ? id(bar_00_1) : anim_frame == 2 ? id(bar_00_2) : id(bar_00_3)); break;
@@ -342,7 +343,7 @@ display:
       
       // === BOTTOM INFO BAR (y: 114-132, safe zone) ===
       // Animated particles near "ppm CO2" text
-      int particle_frame = (t / 125) % 8;  // 8 frame particle animation
+      int particle_frame = frame % 8;  // 8 frame particle animation
       switch(particle_frame) {
         case 0: it.image(45, 110, id(particles_0)); break;
         case 1: it.image(45, 110, id(particles_1)); break;
@@ -372,6 +373,9 @@ display:
       // Bottom-right
       it.filled_rectangle(240 - corner_len - 2, 132, corner_len, corner_w, sc);
       it.filled_rectangle(237, 124, corner_w, corner_len, sc);
+
+      frame++;
+      if(frame >= 8) frame = 0;
 
 button:
   - platform: shutdown

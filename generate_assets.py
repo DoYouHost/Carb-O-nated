@@ -163,7 +163,7 @@ def create_animated_bar():
     # This allows smoother transitions: each segment can have 4 sub-levels
     for fill_level in range(0, 73):  # 0-72 sub-levels (18 segments * 4)
         for frame in range(4):  # 4 animation frames for pulse
-            img = Image.new('RGB', (bar_width, 11), (20, 20, 28))  # Dark background for all segments
+            img = Image.new('RGBA', (bar_width, 11), (0, 0, 0, 0))  # Transparent background
             draw = ImageDraw.Draw(img)
             
             # Convert sub-level to segment + partial fill
@@ -185,12 +185,14 @@ def create_animated_bar():
                 sx = bar_x + s * (seg_w + seg_gap)
                 
                 if s < segment_idx:
-                    # Fully filled segment
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=color)
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55), width=1)
+                    # Fully filled segment - show the color
+                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=(*color, 255))
+                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55, 255), width=1)
                 elif s == segment_idx and segment_partial > 0:
-                    # Partially filled segment (4 levels of fill)
+                    # Partially filled segment - dark background + partial color
                     partial_w = int((seg_w - 1) * segment_partial / 4)
+                    # Fill entire segment background
+                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=(20, 20, 28, 255))
                     if partial_w > 0:
                         # Pulse animation on partial segment
                         if frame == 0:
@@ -202,11 +204,12 @@ def create_animated_bar():
                         else:
                             pulse_color = color
                         
-                        draw.rectangle([(sx, 0), (sx + partial_w, 10)], fill=pulse_color)
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55), width=1)
+                        draw.rectangle([(sx, 0), (sx + partial_w, 10)], fill=(*pulse_color, 255))
+                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55, 255), width=1)
                 else:
-                    # Empty segment with dark background already filled, just add border
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55), width=1)
+                    # Empty segment - just dark background + border
+                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=(20, 20, 28, 255))
+                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55, 255), width=1)
             
             img.save(f'assets/bar_animated_{fill_level:02d}_{frame}.png')
     
