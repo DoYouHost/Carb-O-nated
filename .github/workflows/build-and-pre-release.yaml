@@ -194,7 +194,7 @@ jobs:
     with:
       files: |
         esp32-carb-o-nated.yml
-      esphome-version: "2025.10.3"
+      esphome-version: "2026.1.2"
       combined-name: Carb-O-nated
       release-version: ${{ needs.generate-version.outputs.version }}
       release-summary: ${{ needs.generate-version.outputs.summary }}
