@@ -85,9 +85,18 @@ jobs:
             echo "version.txt is empty" >&2
             exit 1
           fi
+          echo "Version: $VERSION"
+          
+          # Check if tag already exists
+          git fetch --tags || true
+          if git rev-parse "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "❌ Error: Tag $VERSION already exists" >&2
+            exit 1
+          fi
+          echo "✅ Tag $VERSION does not exist, safe to proceed"
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
