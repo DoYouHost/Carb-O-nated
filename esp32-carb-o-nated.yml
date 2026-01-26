@@ -196,6 +196,10 @@ font:
     id: roboto_bold_60
     size: 60
     glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+  - file: "gfonts://Roboto@700"
+    id: roboto_bold_25
+    size: 25
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
   - file: "gfonts://Roboto@500"
     id: roboto_medium_20
     size: 20
@@ -217,12 +221,11 @@ display:
     reset_pin: GPIO23
     rotation: 270°
     data_rate: 80MHz
-    update_interval: 100ms
+    update_interval: 200ms
     lambda: |-
       float co2 = id(scd4x_co2).state;
       
       if (isnan(co2)) {
-        // Use init screen bitmap
         it.image(0, 0, id(init_screen));
         int angle = (millis() / 50) % 360;
         for (int i = 0; i < 8; i++) {
@@ -239,46 +242,28 @@ display:
       Color sc = level.color;
       const char* status_text = get_co2_level_text(level.type);
       int t = millis();
+
+      static uint8_t frame = 0;
       
       // === BACKGROUND WITH GRADIENT IMAGE ===
       it.image(0, 0, id(bg_gradient));
       
       // === TOP STATUS TEXT ===
-      it.print(120, 7, id(roboto_medium_20), sc, TextAlign::TOP_CENTER, status_text);
+      it.print(120, 3, id(roboto_bold_25), sc, TextAlign::TOP_CENTER, status_text);
       
-      // === ANIMATED CONNECTOR (flowing line between status and number) ===
-      int connector_frame = (t / 125) % 8;  // 8 frame animation, smooth flow
-      switch(connector_frame) {
-        case 0: it.image(80, 30, id(connector_0)); break;
-        case 1: it.image(80, 30, id(connector_1)); break;
-        case 2: it.image(80, 30, id(connector_2)); break;
-        case 3: it.image(80, 30, id(connector_3)); break;
-        case 4: it.image(80, 30, id(connector_4)); break;
-        case 5: it.image(80, 30, id(connector_5)); break;
-        case 6: it.image(80, 30, id(connector_6)); break;
-        case 7: it.image(80, 30, id(connector_7)); break;
-      }
-      
-      // === MAIN CO2 VALUE (y: 28-95, centered) ===
-      // Shadow layer
-      it.printf(121, 36, id(roboto_bold_60), 
-        Color(sc.r/4, sc.g/4, sc.b/4), 
-        TextAlign::TOP_CENTER, "%.0f", co2);
-      // Main text with subtle animation
+      // === MAIN CO2 VALUE ===
       int depth = (t / 200) % 2;
-      it.printf(120 - depth, 35, id(roboto_bold_60), sc, 
+      it.printf(120 - depth, 22, id(roboto_bold_60), sc, 
         TextAlign::TOP_CENTER, "%.0f", co2);
       
-      // === SEGMENTED BAR (y: 97-109, safe zone) - scales 0-3000 ppm ===
+      // === SEGMENTED BAR ===
       int max_co2 = 3000;
       float pct = min(1.0f, co2 / max_co2);
       int segments = 18;
-      int filled = (int)((segments * 4) * pct);  // 72 sub-levels for 4x granularity
+      int filled = (int)((segments * 4) * pct);
       if (filled > 72) filled = 72;
-      int anim_frame = (t / 150) % 4;  // 4 animation frames, ~600ms cycle
+      int anim_frame = (t / 150) % 4;
       
-      // Use full animated bar image instead of drawing individual segments
-      // Using 292 total assets (73 fill levels 0-72 × 4 animation frames)
       switch(filled) {
         case 0: it.image(7, 97, anim_frame == 0 ? id(bar_00_0) : anim_frame == 1 ? id(bar_00_1) : anim_frame == 2 ? id(bar_00_2) : id(bar_00_3)); break;
         case 1: it.image(7, 97, anim_frame == 0 ? id(bar_01_0) : anim_frame == 1 ? id(bar_01_1) : anim_frame == 2 ? id(bar_01_2) : id(bar_01_3)); break;
@@ -356,7 +341,7 @@ display:
       }
       
       // === BOTTOM INFO BAR (y: 114-132, safe zone) ===
-      // Animated particles near "ppm CO2" text (wider coverage)
+      // Animated particles near "ppm CO2" text
       int particle_frame = (t / 125) % 8;  // 8 frame particle animation
       switch(particle_frame) {
         case 0: it.image(45, 110, id(particles_0)); break;
