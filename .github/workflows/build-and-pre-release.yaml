@@ -29,11 +29,11 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
             echo "Commit message: $COMMIT_MESSAGE"
-            if [[ "$COMMIT_MESSAGE" =~ ^BUILD.* ]]; then
+            if [[ "$COMMIT_MESSAGE" =~ ^[Bb][Uu][Ii][Ll][Dd]: ]]; then
               SHOULD_BUILD="true"
-              echo "✅ Commit message starts with BUILD"
+              echo "✅ Commit message starts with BUILD: or build:"
             else
-              echo "❌ Commit message does not start with BUILD"
+              echo "❌ Commit message does not start with BUILD: or build:"
             fi
           fi
 
@@ -41,11 +41,11 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             PR_TITLE="${{ github.event.pull_request.title }}"
             echo "PR title: $PR_TITLE"
-            if [[ "$PR_TITLE" =~ ^BUILD.* ]]; then
+            if [[ "$PR_TITLE" =~ ^[Bb][Uu][Ii][Ll][Dd]: ]]; then
               SHOULD_BUILD="true"
-              echo "✅ PR title starts with BUILD"
+              echo "✅ PR title starts with BUILD: or build:"
             else
-              echo "❌ PR title does not start with BUILD"
+              echo "❌ PR title does not start with BUILD: or build:"
             fi
           fi
 
