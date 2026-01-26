@@ -20,6 +20,7 @@ esphome:
   includes:
     - co2_levels.h
     - translations.h
+    - lookup_tables.h
 
 esp32:
   board: esp32dev
@@ -215,6 +216,7 @@ display:
     cs_pin: GPIO5
     reset_pin: GPIO23
     rotation: 270°
+    data_rate: 80MHz
     update_interval: 100ms
     lambda: |-
       float co2 = id(scd4x_co2).state;
@@ -225,8 +227,8 @@ display:
         int angle = (millis() / 50) % 360;
         for (int i = 0; i < 8; i++) {
           int a = (angle + i * 45) % 360;
-          int x = 120 + (int)(25 * cos(a * 3.14159 / 180));
-          int y = 67 + (int)(25 * sin(a * 3.14159 / 180));
+          int x = 120 + (int)(25 * cos_lut[a]);
+          int y = 67 + (int)(25 * sin_lut[a]);
           it.filled_circle(x, y, 4, Color(100 + i*20, 100 + i*20, 255));
         }
         it.print(120, 100, id(roboto_medium_20), Color(180, 180, 255), TextAlign::TOP_CENTER, get_initializing());
