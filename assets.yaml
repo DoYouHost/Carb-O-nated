@@ -1,0 +1,1249 @@
+---
+# Particle, Connector, and Bar animation assets
+# Imported as a package in esp32-carb-o-nated.yml
+
+image:
+  - file: assets/bg_gradient.png
+    id: bg_gradient
+    type: RGB565
+  - file: assets/init_screen.png
+    id: init_screen
+    type: RGB565
+    
+  # Particle effect assets (particles_0 through particles_7)
+  - file: assets/particles_00.png
+    id: particles_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_01.png
+    id: particles_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_02.png
+    id: particles_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_03.png
+    id: particles_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_04.png
+    id: particles_4
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_05.png
+    id: particles_5
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_06.png
+    id: particles_6
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/particles_07.png
+    id: particles_7
+    type: RGB
+    transparency: alpha_channel
+
+  # Connector animation assets (connector_0 through connector_7)
+  - file: assets/connector_00.png
+    id: connector_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_01.png
+    id: connector_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_02.png
+    id: connector_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_03.png
+    id: connector_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_04.png
+    id: connector_4
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_05.png
+    id: connector_5
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_06.png
+    id: connector_6
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/connector_07.png
+    id: connector_7
+    type: RGB
+    transparency: alpha_channel
+
+  # Bar animation assets (all 292 assets: bar_00_0 through bar_72_3)
+  - file: assets/bar_animated_00_0.png
+    id: bar_00_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_00_1.png
+    id: bar_00_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_00_2.png
+    id: bar_00_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_00_3.png
+    id: bar_00_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_01_0.png
+    id: bar_01_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_01_1.png
+    id: bar_01_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_01_2.png
+    id: bar_01_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_01_3.png
+    id: bar_01_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_02_0.png
+    id: bar_02_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_02_1.png
+    id: bar_02_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_02_2.png
+    id: bar_02_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_02_3.png
+    id: bar_02_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_03_0.png
+    id: bar_03_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_03_1.png
+    id: bar_03_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_03_2.png
+    id: bar_03_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_03_3.png
+    id: bar_03_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_04_0.png
+    id: bar_04_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_04_1.png
+    id: bar_04_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_04_2.png
+    id: bar_04_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_04_3.png
+    id: bar_04_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_05_0.png
+    id: bar_05_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_05_1.png
+    id: bar_05_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_05_2.png
+    id: bar_05_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_05_3.png
+    id: bar_05_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_06_0.png
+    id: bar_06_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_06_1.png
+    id: bar_06_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_06_2.png
+    id: bar_06_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_06_3.png
+    id: bar_06_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_07_0.png
+    id: bar_07_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_07_1.png
+    id: bar_07_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_07_2.png
+    id: bar_07_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_07_3.png
+    id: bar_07_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_08_0.png
+    id: bar_08_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_08_1.png
+    id: bar_08_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_08_2.png
+    id: bar_08_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_08_3.png
+    id: bar_08_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_09_0.png
+    id: bar_09_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_09_1.png
+    id: bar_09_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_09_2.png
+    id: bar_09_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_09_3.png
+    id: bar_09_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_10_0.png
+    id: bar_10_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_10_1.png
+    id: bar_10_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_10_2.png
+    id: bar_10_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_10_3.png
+    id: bar_10_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_11_0.png
+    id: bar_11_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_11_1.png
+    id: bar_11_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_11_2.png
+    id: bar_11_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_11_3.png
+    id: bar_11_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_12_0.png
+    id: bar_12_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_12_1.png
+    id: bar_12_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_12_2.png
+    id: bar_12_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_12_3.png
+    id: bar_12_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_13_0.png
+    id: bar_13_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_13_1.png
+    id: bar_13_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_13_2.png
+    id: bar_13_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_13_3.png
+    id: bar_13_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_14_0.png
+    id: bar_14_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_14_1.png
+    id: bar_14_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_14_2.png
+    id: bar_14_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_14_3.png
+    id: bar_14_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_15_0.png
+    id: bar_15_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_15_1.png
+    id: bar_15_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_15_2.png
+    id: bar_15_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_15_3.png
+    id: bar_15_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_16_0.png
+    id: bar_16_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_16_1.png
+    id: bar_16_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_16_2.png
+    id: bar_16_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_16_3.png
+    id: bar_16_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_17_0.png
+    id: bar_17_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_17_1.png
+    id: bar_17_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_17_2.png
+    id: bar_17_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_17_3.png
+    id: bar_17_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_18_0.png
+    id: bar_18_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_18_1.png
+    id: bar_18_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_18_2.png
+    id: bar_18_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_18_3.png
+    id: bar_18_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_19_0.png
+    id: bar_19_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_19_1.png
+    id: bar_19_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_19_2.png
+    id: bar_19_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_19_3.png
+    id: bar_19_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_20_0.png
+    id: bar_20_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_20_1.png
+    id: bar_20_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_20_2.png
+    id: bar_20_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_20_3.png
+    id: bar_20_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_21_0.png
+    id: bar_21_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_21_1.png
+    id: bar_21_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_21_2.png
+    id: bar_21_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_21_3.png
+    id: bar_21_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_22_0.png
+    id: bar_22_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_22_1.png
+    id: bar_22_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_22_2.png
+    id: bar_22_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_22_3.png
+    id: bar_22_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_23_0.png
+    id: bar_23_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_23_1.png
+    id: bar_23_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_23_2.png
+    id: bar_23_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_23_3.png
+    id: bar_23_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_24_0.png
+    id: bar_24_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_24_1.png
+    id: bar_24_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_24_2.png
+    id: bar_24_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_24_3.png
+    id: bar_24_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_25_0.png
+    id: bar_25_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_25_1.png
+    id: bar_25_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_25_2.png
+    id: bar_25_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_25_3.png
+    id: bar_25_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_26_0.png
+    id: bar_26_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_26_1.png
+    id: bar_26_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_26_2.png
+    id: bar_26_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_26_3.png
+    id: bar_26_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_27_0.png
+    id: bar_27_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_27_1.png
+    id: bar_27_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_27_2.png
+    id: bar_27_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_27_3.png
+    id: bar_27_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_28_0.png
+    id: bar_28_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_28_1.png
+    id: bar_28_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_28_2.png
+    id: bar_28_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_28_3.png
+    id: bar_28_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_29_0.png
+    id: bar_29_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_29_1.png
+    id: bar_29_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_29_2.png
+    id: bar_29_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_29_3.png
+    id: bar_29_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_30_0.png
+    id: bar_30_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_30_1.png
+    id: bar_30_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_30_2.png
+    id: bar_30_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_30_3.png
+    id: bar_30_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_31_0.png
+    id: bar_31_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_31_1.png
+    id: bar_31_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_31_2.png
+    id: bar_31_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_31_3.png
+    id: bar_31_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_32_0.png
+    id: bar_32_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_32_1.png
+    id: bar_32_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_32_2.png
+    id: bar_32_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_32_3.png
+    id: bar_32_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_33_0.png
+    id: bar_33_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_33_1.png
+    id: bar_33_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_33_2.png
+    id: bar_33_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_33_3.png
+    id: bar_33_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_34_0.png
+    id: bar_34_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_34_1.png
+    id: bar_34_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_34_2.png
+    id: bar_34_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_34_3.png
+    id: bar_34_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_35_0.png
+    id: bar_35_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_35_1.png
+    id: bar_35_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_35_2.png
+    id: bar_35_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_35_3.png
+    id: bar_35_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_36_0.png
+    id: bar_36_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_36_1.png
+    id: bar_36_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_36_2.png
+    id: bar_36_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_36_3.png
+    id: bar_36_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_37_0.png
+    id: bar_37_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_37_1.png
+    id: bar_37_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_37_2.png
+    id: bar_37_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_37_3.png
+    id: bar_37_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_38_0.png
+    id: bar_38_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_38_1.png
+    id: bar_38_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_38_2.png
+    id: bar_38_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_38_3.png
+    id: bar_38_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_39_0.png
+    id: bar_39_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_39_1.png
+    id: bar_39_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_39_2.png
+    id: bar_39_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_39_3.png
+    id: bar_39_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_40_0.png
+    id: bar_40_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_40_1.png
+    id: bar_40_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_40_2.png
+    id: bar_40_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_40_3.png
+    id: bar_40_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_41_0.png
+    id: bar_41_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_41_1.png
+    id: bar_41_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_41_2.png
+    id: bar_41_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_41_3.png
+    id: bar_41_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_42_0.png
+    id: bar_42_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_42_1.png
+    id: bar_42_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_42_2.png
+    id: bar_42_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_42_3.png
+    id: bar_42_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_43_0.png
+    id: bar_43_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_43_1.png
+    id: bar_43_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_43_2.png
+    id: bar_43_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_43_3.png
+    id: bar_43_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_44_0.png
+    id: bar_44_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_44_1.png
+    id: bar_44_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_44_2.png
+    id: bar_44_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_44_3.png
+    id: bar_44_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_45_0.png
+    id: bar_45_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_45_1.png
+    id: bar_45_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_45_2.png
+    id: bar_45_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_45_3.png
+    id: bar_45_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_46_0.png
+    id: bar_46_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_46_1.png
+    id: bar_46_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_46_2.png
+    id: bar_46_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_46_3.png
+    id: bar_46_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_47_0.png
+    id: bar_47_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_47_1.png
+    id: bar_47_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_47_2.png
+    id: bar_47_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_47_3.png
+    id: bar_47_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_48_0.png
+    id: bar_48_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_48_1.png
+    id: bar_48_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_48_2.png
+    id: bar_48_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_48_3.png
+    id: bar_48_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_49_0.png
+    id: bar_49_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_49_1.png
+    id: bar_49_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_49_2.png
+    id: bar_49_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_49_3.png
+    id: bar_49_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_50_0.png
+    id: bar_50_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_50_1.png
+    id: bar_50_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_50_2.png
+    id: bar_50_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_50_3.png
+    id: bar_50_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_51_0.png
+    id: bar_51_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_51_1.png
+    id: bar_51_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_51_2.png
+    id: bar_51_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_51_3.png
+    id: bar_51_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_52_0.png
+    id: bar_52_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_52_1.png
+    id: bar_52_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_52_2.png
+    id: bar_52_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_52_3.png
+    id: bar_52_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_53_0.png
+    id: bar_53_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_53_1.png
+    id: bar_53_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_53_2.png
+    id: bar_53_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_53_3.png
+    id: bar_53_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_54_0.png
+    id: bar_54_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_54_1.png
+    id: bar_54_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_54_2.png
+    id: bar_54_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_54_3.png
+    id: bar_54_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_55_0.png
+    id: bar_55_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_55_1.png
+    id: bar_55_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_55_2.png
+    id: bar_55_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_55_3.png
+    id: bar_55_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_56_0.png
+    id: bar_56_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_56_1.png
+    id: bar_56_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_56_2.png
+    id: bar_56_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_56_3.png
+    id: bar_56_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_57_0.png
+    id: bar_57_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_57_1.png
+    id: bar_57_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_57_2.png
+    id: bar_57_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_57_3.png
+    id: bar_57_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_58_0.png
+    id: bar_58_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_58_1.png
+    id: bar_58_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_58_2.png
+    id: bar_58_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_58_3.png
+    id: bar_58_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_59_0.png
+    id: bar_59_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_59_1.png
+    id: bar_59_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_59_2.png
+    id: bar_59_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_59_3.png
+    id: bar_59_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_60_0.png
+    id: bar_60_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_60_1.png
+    id: bar_60_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_60_2.png
+    id: bar_60_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_60_3.png
+    id: bar_60_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_61_0.png
+    id: bar_61_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_61_1.png
+    id: bar_61_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_61_2.png
+    id: bar_61_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_61_3.png
+    id: bar_61_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_62_0.png
+    id: bar_62_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_62_1.png
+    id: bar_62_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_62_2.png
+    id: bar_62_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_62_3.png
+    id: bar_62_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_63_0.png
+    id: bar_63_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_63_1.png
+    id: bar_63_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_63_2.png
+    id: bar_63_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_63_3.png
+    id: bar_63_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_64_0.png
+    id: bar_64_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_64_1.png
+    id: bar_64_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_64_2.png
+    id: bar_64_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_64_3.png
+    id: bar_64_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_65_0.png
+    id: bar_65_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_65_1.png
+    id: bar_65_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_65_2.png
+    id: bar_65_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_65_3.png
+    id: bar_65_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_66_0.png
+    id: bar_66_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_66_1.png
+    id: bar_66_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_66_2.png
+    id: bar_66_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_66_3.png
+    id: bar_66_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_67_0.png
+    id: bar_67_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_67_1.png
+    id: bar_67_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_67_2.png
+    id: bar_67_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_67_3.png
+    id: bar_67_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_68_0.png
+    id: bar_68_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_68_1.png
+    id: bar_68_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_68_2.png
+    id: bar_68_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_68_3.png
+    id: bar_68_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_69_0.png
+    id: bar_69_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_69_1.png
+    id: bar_69_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_69_2.png
+    id: bar_69_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_69_3.png
+    id: bar_69_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_70_0.png
+    id: bar_70_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_70_1.png
+    id: bar_70_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_70_2.png
+    id: bar_70_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_70_3.png
+    id: bar_70_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_71_0.png
+    id: bar_71_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_71_1.png
+    id: bar_71_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_71_2.png
+    id: bar_71_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_71_3.png
+    id: bar_71_3
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_72_0.png
+    id: bar_72_0
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_72_1.png
+    id: bar_72_1
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_72_2.png
+    id: bar_72_2
+    type: RGB
+    transparency: alpha_channel
+  - file: assets/bar_animated_72_3.png
+    id: bar_72_3
+    type: RGB
+    transparency: alpha_channel

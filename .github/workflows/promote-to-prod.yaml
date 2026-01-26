@@ -1,0 +1,92 @@
+name: Promote to Production
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote to production (e.g., 2025.1.5)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  check-release:
+    name: Check Release
+    runs-on: ubuntu-latest
+    outputs:
+      should-promote: ${{ steps.check.outputs.should-promote }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Check if release should be promoted
+        id: check
+        run: |
+          SHOULD_PROMOTE="false"
+          
+          # Determine version based on trigger type
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+            echo "Manual promotion - version: $VERSION"
+          else
+            VERSION="${{ github.event.release.tag_name }}"
+            echo "Release event - version: $VERSION"
+          fi
+          
+          # For manual dispatch, always promote if version is valid
+          # For release events, check if it's not draft and not prerelease
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RELEASE_CONDITIONS_MET="true"
+          else
+            if [ "${{ github.event.release.draft }}" = "false" ] && [ "${{ github.event.release.prerelease }}" = "false" ]; then
+              RELEASE_CONDITIONS_MET="true"
+              echo "✅ Release conditions met - full release (not draft, not prerelease)"
+            else
+              RELEASE_CONDITIONS_MET="false"
+              echo "❌ Skipping promotion - release is draft or prerelease"
+            fi
+          fi
+          
+          if [ "$RELEASE_CONDITIONS_MET" = "true" ]; then
+            # Check if version follows semantic versioning pattern (YYYY.M.P)
+            if [[ "$VERSION" =~ ^[0-9]{4}\.[0-9]+\.[0-9]+$ ]]; then 
+              SHOULD_PROMOTE="true"
+              echo "✅ Will promote release $VERSION to production"
+            else
+              echo "❌ Version $VERSION does not follow expected pattern (YYYY.M.P)"
+            fi
+          fi
+          
+          echo "should-promote=$SHOULD_PROMOTE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  promote-to-production:
+    name: Promote to Production
+    needs: check-release
+    if: needs.check-release.outputs.should-promote == 'true'
+    uses: DoYouHost/workflows/.github/workflows/promote-r2.yml@main
+    with:
+      version: "${{ needs.check-release.outputs.version }}"
+      directory: "Carb-O-nated"
+      channel: "production"
+      manifest-filename: "manifest.json"
+    secrets: inherit
+
+  trigger-publish-pages:
+    name: Trigger Publish Pages
+    needs:
+      - promote-to-production
+      - check-release
+    if: needs.check-release.outputs.should-promote == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch publish-pages (action)
+        uses: benc-uk/workflow-dispatch@v1.2.4
+        with:
+          token: ${{ secrets.DOYOUHOST_PAT }}
+          repo: ${{ github.repository }}
+          workflow: publish-pages.yaml
+          ref: main
+          inputs: '{ "version": "${{ needs.check-release.outputs.version }}", "channel": "production" }'

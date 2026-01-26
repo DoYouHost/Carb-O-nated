@@ -1,0 +1,403 @@
+---
+substitutions:
+  API_KEY: "HrnLJeueTkAq4x1BBxR2ugB460w9H+Q50uNPBLgnYK0="
+  OTA_PASSWORD: "ean1dkAGQi7sz9J3kGM@JG0v2Yohe930"
+  PROD_MANIFEST_URL: "https://morganmlg.com/carb-o-nated/manifest.json"
+  BETA_MANIFEST_URL: "https://morganmlg.com/carb-o-nated/manifest-beta.json"
+  WEB_USERNAME: "esphome"
+  WEB_PASSWORD: "esphome"
+  AP_SSID: "Carb-O-nated"
+  AP_PASSWORD: "esphome-fallback"
+
+esphome:
+  name: carb-o-nated
+  friendly_name: "Carb-O-nated"
+  comment: "ESP32 CO2 Sensor and Display"
+  name_add_mac_suffix: true
+  project:
+    name: "DoYouHost.Carb-O-nated"
+    version: "dev"
+  includes:
+    - co2_levels.h
+    - translations.h
+
+esp32:
+  board: esp32dev
+  cpu_frequency: 240MHz
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESP32_SPIRAM_SUPPORT: n
+
+dashboard_import:
+  package_import_url: github://DoYouHost/Carb-O-nated/esp32-carb-o-nated.yml@main
+  import_full_config: false
+
+packages:
+  DoYouHost/ESPHomeTemplates:
+    url: https://github.com/DoYouHost/ESPHomeTemplates
+    files: 
+      - basic.yaml
+      - debug.yaml
+      - updateBetaProdStaging.yaml
+      - webServer3.yaml
+      - wifiInfo.yaml
+    ref: main
+    refresh: 0d
+  
+  assets: !include assets.yaml
+
+wifi:
+  reboot_timeout: 15min
+  enable_btm: true
+  enable_rrm: true
+  post_connect_roaming: true
+  ap: 
+    ssid: "${AP_SSID}"
+    password: "${AP_PASSWORD}"
+  on_connect:
+    - lambda: |-
+        id(improv_component).stop();
+
+captive_portal:
+
+improv_serial:
+
+esp32_improv:
+  id: improv_component
+  authorizer: button_b
+
+api:
+  reboot_timeout: 15min
+  encryption:
+    key: "${API_KEY}"
+
+  actions:
+    - action: set_ambient_pressure
+      variables:
+        pressure_mbar: int
+      then:
+        - lambda: "id(co2_sensor)->set_ambient_pressure_compensation(pressure_mbar);"
+
+ota:
+  - platform: esphome
+    password: "${OTA_PASSWORD}"
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+
+output:
+  - platform: ledc
+    pin: GPIO4
+    id: output_display_backlight
+
+light:
+  - platform: monochromatic
+    name: "Display Backlight"
+    output: output_display_backlight
+    restore_mode: RESTORE_DEFAULT_ON
+
+binary_sensor:
+  - platform: gpio
+    id: button_a
+    name: "Button A"
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: true
+  
+  - platform: gpio
+    id: button_b
+    name: "Button B"
+    pin:
+      number: GPIO35
+      inverted: true
+
+sensor:
+  - platform: scd4x
+    address: 0x62
+    id: co2_sensor
+    update_interval: 15s
+    automatic_self_calibration: true
+    # temperature_offset: 0
+    measurement_mode: single_shot
+    co2:
+      name: "CO2 Concentration"
+      id: scd4x_co2
+      unit_of_measurement: "ppm"
+      filters:
+        - skip_initial: 4
+        - exponential_moving_average:
+            alpha: 0.1
+            send_every: 12
+    # temperature:
+    #   name: "SCD4x Temperature"
+    #   unit_of_measurement: "°C"
+    #   filters:
+    #     - skip_initial: 4
+    #     - exponential_moving_average:
+    #         alpha: 0.1
+    #         send_every: 12
+    # humidity:
+    #   name: "SCD4x Humidity"
+    #   unit_of_measurement: "%"
+    #   filters:
+    #     - skip_initial: 4
+    #     - exponential_moving_average:
+    #         alpha: 0.1
+    #         send_every: 12
+
+text_sensor:
+  - platform: template
+    name: "CO2 Air Quality Level"
+    id: co2_level_text
+    icon: "mdi:air-filter"
+    update_interval: 60s
+    lambda: |-
+      float co2 = id(scd4x_co2).state;
+      CO2Level level = get_co2_level(co2);
+      return {get_co2_level_text(level.type)};
+
+select:
+  - platform: template
+    name: "Dashboard Language"
+    id: dashboard_language
+    icon: "mdi:translate"
+    optimistic: true
+    options:
+      - "English"
+      - "Polski"
+      - "Deutsch"
+      - "Français"
+      - "Español"
+    initial_option: "English"
+    restore_value: true
+    on_value:
+      then:
+        - lambda: |-
+            int lang_map[] = {0, 1, 2, 3, 4};
+            if (x == "English") current_language = LANG_EN;
+            else if (x == "Polski") current_language = LANG_PL;
+            else if (x == "Deutsch") current_language = LANG_DE;
+            else if (x == "Français") current_language = LANG_FR;
+            else if (x == "Español") current_language = LANG_ES;
+
+font:
+  - file: "gfonts://Roboto@700"
+    id: roboto_bold_60
+    size: 60
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+  - file: "gfonts://Roboto@500"
+    id: roboto_medium_20
+    size: 20
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+  - file: "gfonts://Roboto"
+    id: roboto_16b
+    size: 16
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+  - file: "gfonts://Roboto"
+    id: roboto_12
+    size: 12
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+
+display:
+  - platform: mipi_spi
+    model: T-DISPLAY
+    dc_pin: GPIO16
+    cs_pin: GPIO5
+    reset_pin: GPIO23
+    rotation: 270°
+    update_interval: 100ms
+    lambda: |-
+      float co2 = id(scd4x_co2).state;
+      
+      if (isnan(co2)) {
+        // Use init screen bitmap
+        it.image(0, 0, id(init_screen));
+        int angle = (millis() / 50) % 360;
+        for (int i = 0; i < 8; i++) {
+          int a = (angle + i * 45) % 360;
+          int x = 120 + (int)(25 * cos(a * 3.14159 / 180));
+          int y = 67 + (int)(25 * sin(a * 3.14159 / 180));
+          it.filled_circle(x, y, 4, Color(100 + i*20, 100 + i*20, 255));
+        }
+        it.print(120, 100, id(roboto_medium_20), Color(180, 180, 255), TextAlign::TOP_CENTER, get_initializing());
+        return;
+      }
+      
+      CO2Level level = get_co2_level(co2);
+      Color sc = level.color;
+      const char* status_text = get_co2_level_text(level.type);
+      int t = millis();
+      
+      // === BACKGROUND WITH GRADIENT IMAGE ===
+      it.image(0, 0, id(bg_gradient));
+      
+      // === TOP STATUS TEXT ===
+      it.print(120, 7, id(roboto_medium_20), sc, TextAlign::TOP_CENTER, status_text);
+      
+      // === ANIMATED CONNECTOR (flowing line between status and number) ===
+      int connector_frame = (t / 125) % 8;  // 8 frame animation, smooth flow
+      switch(connector_frame) {
+        case 0: it.image(80, 30, id(connector_0)); break;
+        case 1: it.image(80, 30, id(connector_1)); break;
+        case 2: it.image(80, 30, id(connector_2)); break;
+        case 3: it.image(80, 30, id(connector_3)); break;
+        case 4: it.image(80, 30, id(connector_4)); break;
+        case 5: it.image(80, 30, id(connector_5)); break;
+        case 6: it.image(80, 30, id(connector_6)); break;
+        case 7: it.image(80, 30, id(connector_7)); break;
+      }
+      
+      // === MAIN CO2 VALUE (y: 28-95, centered) ===
+      // Shadow layer
+      it.printf(121, 36, id(roboto_bold_60), 
+        Color(sc.r/4, sc.g/4, sc.b/4), 
+        TextAlign::TOP_CENTER, "%.0f", co2);
+      // Main text with subtle animation
+      int depth = (t / 200) % 2;
+      it.printf(120 - depth, 35, id(roboto_bold_60), sc, 
+        TextAlign::TOP_CENTER, "%.0f", co2);
+      
+      // === SEGMENTED BAR (y: 97-109, safe zone) - scales 0-3000 ppm ===
+      int max_co2 = 3000;
+      float pct = min(1.0f, co2 / max_co2);
+      int segments = 18;
+      int filled = (int)((segments * 4) * pct);  // 72 sub-levels for 4x granularity
+      if (filled > 72) filled = 72;
+      int anim_frame = (t / 150) % 4;  // 4 animation frames, ~600ms cycle
+      
+      // Use full animated bar image instead of drawing individual segments
+      // Using 292 total assets (73 fill levels 0-72 × 4 animation frames)
+      switch(filled) {
+        case 0: it.image(7, 97, anim_frame == 0 ? id(bar_00_0) : anim_frame == 1 ? id(bar_00_1) : anim_frame == 2 ? id(bar_00_2) : id(bar_00_3)); break;
+        case 1: it.image(7, 97, anim_frame == 0 ? id(bar_01_0) : anim_frame == 1 ? id(bar_01_1) : anim_frame == 2 ? id(bar_01_2) : id(bar_01_3)); break;
+        case 2: it.image(7, 97, anim_frame == 0 ? id(bar_02_0) : anim_frame == 1 ? id(bar_02_1) : anim_frame == 2 ? id(bar_02_2) : id(bar_02_3)); break;
+        case 3: it.image(7, 97, anim_frame == 0 ? id(bar_03_0) : anim_frame == 1 ? id(bar_03_1) : anim_frame == 2 ? id(bar_03_2) : id(bar_03_3)); break;
+        case 4: it.image(7, 97, anim_frame == 0 ? id(bar_04_0) : anim_frame == 1 ? id(bar_04_1) : anim_frame == 2 ? id(bar_04_2) : id(bar_04_3)); break;
+        case 5: it.image(7, 97, anim_frame == 0 ? id(bar_05_0) : anim_frame == 1 ? id(bar_05_1) : anim_frame == 2 ? id(bar_05_2) : id(bar_05_3)); break;
+        case 6: it.image(7, 97, anim_frame == 0 ? id(bar_06_0) : anim_frame == 1 ? id(bar_06_1) : anim_frame == 2 ? id(bar_06_2) : id(bar_06_3)); break;
+        case 7: it.image(7, 97, anim_frame == 0 ? id(bar_07_0) : anim_frame == 1 ? id(bar_07_1) : anim_frame == 2 ? id(bar_07_2) : id(bar_07_3)); break;
+        case 8: it.image(7, 97, anim_frame == 0 ? id(bar_08_0) : anim_frame == 1 ? id(bar_08_1) : anim_frame == 2 ? id(bar_08_2) : id(bar_08_3)); break;
+        case 9: it.image(7, 97, anim_frame == 0 ? id(bar_09_0) : anim_frame == 1 ? id(bar_09_1) : anim_frame == 2 ? id(bar_09_2) : id(bar_09_3)); break;
+        case 10: it.image(7, 97, anim_frame == 0 ? id(bar_10_0) : anim_frame == 1 ? id(bar_10_1) : anim_frame == 2 ? id(bar_10_2) : id(bar_10_3)); break;
+        case 11: it.image(7, 97, anim_frame == 0 ? id(bar_11_0) : anim_frame == 1 ? id(bar_11_1) : anim_frame == 2 ? id(bar_11_2) : id(bar_11_3)); break;
+        case 12: it.image(7, 97, anim_frame == 0 ? id(bar_12_0) : anim_frame == 1 ? id(bar_12_1) : anim_frame == 2 ? id(bar_12_2) : id(bar_12_3)); break;
+        case 13: it.image(7, 97, anim_frame == 0 ? id(bar_13_0) : anim_frame == 1 ? id(bar_13_1) : anim_frame == 2 ? id(bar_13_2) : id(bar_13_3)); break;
+        case 14: it.image(7, 97, anim_frame == 0 ? id(bar_14_0) : anim_frame == 1 ? id(bar_14_1) : anim_frame == 2 ? id(bar_14_2) : id(bar_14_3)); break;
+        case 15: it.image(7, 97, anim_frame == 0 ? id(bar_15_0) : anim_frame == 1 ? id(bar_15_1) : anim_frame == 2 ? id(bar_15_2) : id(bar_15_3)); break;
+        case 16: it.image(7, 97, anim_frame == 0 ? id(bar_16_0) : anim_frame == 1 ? id(bar_16_1) : anim_frame == 2 ? id(bar_16_2) : id(bar_16_3)); break;
+        case 17: it.image(7, 97, anim_frame == 0 ? id(bar_17_0) : anim_frame == 1 ? id(bar_17_1) : anim_frame == 2 ? id(bar_17_2) : id(bar_17_3)); break;
+        case 18: it.image(7, 97, anim_frame == 0 ? id(bar_18_0) : anim_frame == 1 ? id(bar_18_1) : anim_frame == 2 ? id(bar_18_2) : id(bar_18_3)); break;
+        case 19: it.image(7, 97, anim_frame == 0 ? id(bar_19_0) : anim_frame == 1 ? id(bar_19_1) : anim_frame == 2 ? id(bar_19_2) : id(bar_19_3)); break;
+        case 20: it.image(7, 97, anim_frame == 0 ? id(bar_20_0) : anim_frame == 1 ? id(bar_20_1) : anim_frame == 2 ? id(bar_20_2) : id(bar_20_3)); break;
+        case 21: it.image(7, 97, anim_frame == 0 ? id(bar_21_0) : anim_frame == 1 ? id(bar_21_1) : anim_frame == 2 ? id(bar_21_2) : id(bar_21_3)); break;
+        case 22: it.image(7, 97, anim_frame == 0 ? id(bar_22_0) : anim_frame == 1 ? id(bar_22_1) : anim_frame == 2 ? id(bar_22_2) : id(bar_22_3)); break;
+        case 23: it.image(7, 97, anim_frame == 0 ? id(bar_23_0) : anim_frame == 1 ? id(bar_23_1) : anim_frame == 2 ? id(bar_23_2) : id(bar_23_3)); break;
+        case 24: it.image(7, 97, anim_frame == 0 ? id(bar_24_0) : anim_frame == 1 ? id(bar_24_1) : anim_frame == 2 ? id(bar_24_2) : id(bar_24_3)); break;
+        case 25: it.image(7, 97, anim_frame == 0 ? id(bar_25_0) : anim_frame == 1 ? id(bar_25_1) : anim_frame == 2 ? id(bar_25_2) : id(bar_25_3)); break;
+        case 26: it.image(7, 97, anim_frame == 0 ? id(bar_26_0) : anim_frame == 1 ? id(bar_26_1) : anim_frame == 2 ? id(bar_26_2) : id(bar_26_3)); break;
+        case 27: it.image(7, 97, anim_frame == 0 ? id(bar_27_0) : anim_frame == 1 ? id(bar_27_1) : anim_frame == 2 ? id(bar_27_2) : id(bar_27_3)); break;
+        case 28: it.image(7, 97, anim_frame == 0 ? id(bar_28_0) : anim_frame == 1 ? id(bar_28_1) : anim_frame == 2 ? id(bar_28_2) : id(bar_28_3)); break;
+        case 29: it.image(7, 97, anim_frame == 0 ? id(bar_29_0) : anim_frame == 1 ? id(bar_29_1) : anim_frame == 2 ? id(bar_29_2) : id(bar_29_3)); break;
+        case 30: it.image(7, 97, anim_frame == 0 ? id(bar_30_0) : anim_frame == 1 ? id(bar_30_1) : anim_frame == 2 ? id(bar_30_2) : id(bar_30_3)); break;
+        case 31: it.image(7, 97, anim_frame == 0 ? id(bar_31_0) : anim_frame == 1 ? id(bar_31_1) : anim_frame == 2 ? id(bar_31_2) : id(bar_31_3)); break;
+        case 32: it.image(7, 97, anim_frame == 0 ? id(bar_32_0) : anim_frame == 1 ? id(bar_32_1) : anim_frame == 2 ? id(bar_32_2) : id(bar_32_3)); break;
+        case 33: it.image(7, 97, anim_frame == 0 ? id(bar_33_0) : anim_frame == 1 ? id(bar_33_1) : anim_frame == 2 ? id(bar_33_2) : id(bar_33_3)); break;
+        case 34: it.image(7, 97, anim_frame == 0 ? id(bar_34_0) : anim_frame == 1 ? id(bar_34_1) : anim_frame == 2 ? id(bar_34_2) : id(bar_34_3)); break;
+        case 35: it.image(7, 97, anim_frame == 0 ? id(bar_35_0) : anim_frame == 1 ? id(bar_35_1) : anim_frame == 2 ? id(bar_35_2) : id(bar_35_3)); break;
+        case 36: it.image(7, 97, anim_frame == 0 ? id(bar_36_0) : anim_frame == 1 ? id(bar_36_1) : anim_frame == 2 ? id(bar_36_2) : id(bar_36_3)); break;
+        case 37: it.image(7, 97, anim_frame == 0 ? id(bar_37_0) : anim_frame == 1 ? id(bar_37_1) : anim_frame == 2 ? id(bar_37_2) : id(bar_37_3)); break;
+        case 38: it.image(7, 97, anim_frame == 0 ? id(bar_38_0) : anim_frame == 1 ? id(bar_38_1) : anim_frame == 2 ? id(bar_38_2) : id(bar_38_3)); break;
+        case 39: it.image(7, 97, anim_frame == 0 ? id(bar_39_0) : anim_frame == 1 ? id(bar_39_1) : anim_frame == 2 ? id(bar_39_2) : id(bar_39_3)); break;
+        case 40: it.image(7, 97, anim_frame == 0 ? id(bar_40_0) : anim_frame == 1 ? id(bar_40_1) : anim_frame == 2 ? id(bar_40_2) : id(bar_40_3)); break;
+        case 41: it.image(7, 97, anim_frame == 0 ? id(bar_41_0) : anim_frame == 1 ? id(bar_41_1) : anim_frame == 2 ? id(bar_41_2) : id(bar_41_3)); break;
+        case 42: it.image(7, 97, anim_frame == 0 ? id(bar_42_0) : anim_frame == 1 ? id(bar_42_1) : anim_frame == 2 ? id(bar_42_2) : id(bar_42_3)); break;
+        case 43: it.image(7, 97, anim_frame == 0 ? id(bar_43_0) : anim_frame == 1 ? id(bar_43_1) : anim_frame == 2 ? id(bar_43_2) : id(bar_43_3)); break;
+        case 44: it.image(7, 97, anim_frame == 0 ? id(bar_44_0) : anim_frame == 1 ? id(bar_44_1) : anim_frame == 2 ? id(bar_44_2) : id(bar_44_3)); break;
+        case 45: it.image(7, 97, anim_frame == 0 ? id(bar_45_0) : anim_frame == 1 ? id(bar_45_1) : anim_frame == 2 ? id(bar_45_2) : id(bar_45_3)); break;
+        case 46: it.image(7, 97, anim_frame == 0 ? id(bar_46_0) : anim_frame == 1 ? id(bar_46_1) : anim_frame == 2 ? id(bar_46_2) : id(bar_46_3)); break;
+        case 47: it.image(7, 97, anim_frame == 0 ? id(bar_47_0) : anim_frame == 1 ? id(bar_47_1) : anim_frame == 2 ? id(bar_47_2) : id(bar_47_3)); break;
+        case 48: it.image(7, 97, anim_frame == 0 ? id(bar_48_0) : anim_frame == 1 ? id(bar_48_1) : anim_frame == 2 ? id(bar_48_2) : id(bar_48_3)); break;
+        case 49: it.image(7, 97, anim_frame == 0 ? id(bar_49_0) : anim_frame == 1 ? id(bar_49_1) : anim_frame == 2 ? id(bar_49_2) : id(bar_49_3)); break;
+        case 50: it.image(7, 97, anim_frame == 0 ? id(bar_50_0) : anim_frame == 1 ? id(bar_50_1) : anim_frame == 2 ? id(bar_50_2) : id(bar_50_3)); break;
+        case 51: it.image(7, 97, anim_frame == 0 ? id(bar_51_0) : anim_frame == 1 ? id(bar_51_1) : anim_frame == 2 ? id(bar_51_2) : id(bar_51_3)); break;
+        case 52: it.image(7, 97, anim_frame == 0 ? id(bar_52_0) : anim_frame == 1 ? id(bar_52_1) : anim_frame == 2 ? id(bar_52_2) : id(bar_52_3)); break;
+        case 53: it.image(7, 97, anim_frame == 0 ? id(bar_53_0) : anim_frame == 1 ? id(bar_53_1) : anim_frame == 2 ? id(bar_53_2) : id(bar_53_3)); break;
+        case 54: it.image(7, 97, anim_frame == 0 ? id(bar_54_0) : anim_frame == 1 ? id(bar_54_1) : anim_frame == 2 ? id(bar_54_2) : id(bar_54_3)); break;
+        case 55: it.image(7, 97, anim_frame == 0 ? id(bar_55_0) : anim_frame == 1 ? id(bar_55_1) : anim_frame == 2 ? id(bar_55_2) : id(bar_55_3)); break;
+        case 56: it.image(7, 97, anim_frame == 0 ? id(bar_56_0) : anim_frame == 1 ? id(bar_56_1) : anim_frame == 2 ? id(bar_56_2) : id(bar_56_3)); break;
+        case 57: it.image(7, 97, anim_frame == 0 ? id(bar_57_0) : anim_frame == 1 ? id(bar_57_1) : anim_frame == 2 ? id(bar_57_2) : id(bar_57_3)); break;
+        case 58: it.image(7, 97, anim_frame == 0 ? id(bar_58_0) : anim_frame == 1 ? id(bar_58_1) : anim_frame == 2 ? id(bar_58_2) : id(bar_58_3)); break;
+        case 59: it.image(7, 97, anim_frame == 0 ? id(bar_59_0) : anim_frame == 1 ? id(bar_59_1) : anim_frame == 2 ? id(bar_59_2) : id(bar_59_3)); break;
+        case 60: it.image(7, 97, anim_frame == 0 ? id(bar_60_0) : anim_frame == 1 ? id(bar_60_1) : anim_frame == 2 ? id(bar_60_2) : id(bar_60_3)); break;
+        case 61: it.image(7, 97, anim_frame == 0 ? id(bar_61_0) : anim_frame == 1 ? id(bar_61_1) : anim_frame == 2 ? id(bar_61_2) : id(bar_61_3)); break;
+        case 62: it.image(7, 97, anim_frame == 0 ? id(bar_62_0) : anim_frame == 1 ? id(bar_62_1) : anim_frame == 2 ? id(bar_62_2) : id(bar_62_3)); break;
+        case 63: it.image(7, 97, anim_frame == 0 ? id(bar_63_0) : anim_frame == 1 ? id(bar_63_1) : anim_frame == 2 ? id(bar_63_2) : id(bar_63_3)); break;
+        case 64: it.image(7, 97, anim_frame == 0 ? id(bar_64_0) : anim_frame == 1 ? id(bar_64_1) : anim_frame == 2 ? id(bar_64_2) : id(bar_64_3)); break;
+        case 65: it.image(7, 97, anim_frame == 0 ? id(bar_65_0) : anim_frame == 1 ? id(bar_65_1) : anim_frame == 2 ? id(bar_65_2) : id(bar_65_3)); break;
+        case 66: it.image(7, 97, anim_frame == 0 ? id(bar_66_0) : anim_frame == 1 ? id(bar_66_1) : anim_frame == 2 ? id(bar_66_2) : id(bar_66_3)); break;
+        case 67: it.image(7, 97, anim_frame == 0 ? id(bar_67_0) : anim_frame == 1 ? id(bar_67_1) : anim_frame == 2 ? id(bar_67_2) : id(bar_67_3)); break;
+        case 68: it.image(7, 97, anim_frame == 0 ? id(bar_68_0) : anim_frame == 1 ? id(bar_68_1) : anim_frame == 2 ? id(bar_68_2) : id(bar_68_3)); break;
+        case 69: it.image(7, 97, anim_frame == 0 ? id(bar_69_0) : anim_frame == 1 ? id(bar_69_1) : anim_frame == 2 ? id(bar_69_2) : id(bar_69_3)); break;
+        case 70: it.image(7, 97, anim_frame == 0 ? id(bar_70_0) : anim_frame == 1 ? id(bar_70_1) : anim_frame == 2 ? id(bar_70_2) : id(bar_70_3)); break;
+        case 71: it.image(7, 97, anim_frame == 0 ? id(bar_71_0) : anim_frame == 1 ? id(bar_71_1) : anim_frame == 2 ? id(bar_71_2) : id(bar_71_3)); break;
+        case 72: it.image(7, 97, anim_frame == 0 ? id(bar_72_0) : anim_frame == 1 ? id(bar_72_1) : anim_frame == 2 ? id(bar_72_2) : id(bar_72_3)); break;
+      }
+      
+      // === BOTTOM INFO BAR (y: 114-132, safe zone) ===
+      // Animated particles near "ppm CO2" text (wider coverage)
+      int particle_frame = (t / 125) % 8;  // 8 frame particle animation
+      switch(particle_frame) {
+        case 0: it.image(45, 110, id(particles_0)); break;
+        case 1: it.image(45, 110, id(particles_1)); break;
+        case 2: it.image(45, 110, id(particles_2)); break;
+        case 3: it.image(45, 110, id(particles_3)); break;
+        case 4: it.image(45, 110, id(particles_4)); break;
+        case 5: it.image(45, 110, id(particles_5)); break;
+        case 6: it.image(45, 110, id(particles_6)); break;
+        case 7: it.image(45, 110, id(particles_7)); break;
+      }
+      
+      it.print(120, 112, id(roboto_medium_20), Color(160, 160, 180), 
+        TextAlign::TOP_CENTER, get_unit());
+      
+      // === CORNER BRACKETS (static, clean) ===
+      int corner_len = 8;
+      int corner_w = 1;
+      // Top-left
+      it.filled_rectangle(2, 2, corner_len, corner_w, sc);
+      it.filled_rectangle(2, 2, corner_w, corner_len, sc);
+      // Top-right
+      it.filled_rectangle(240 - corner_len - 2, 2, corner_len, corner_w, sc);
+      it.filled_rectangle(237, 2, corner_w, corner_len, sc);
+      // Bottom-left
+      it.filled_rectangle(2, 132, corner_len, corner_w, sc);
+      it.filled_rectangle(2, 124, corner_w, corner_len, sc);
+      // Bottom-right
+      it.filled_rectangle(240 - corner_len - 2, 132, corner_len, corner_w, sc);
+      it.filled_rectangle(237, 124, corner_w, corner_len, sc);
+
+button:
+  - platform: shutdown
+    name: "Shutdown"
+  - platform: restart
+    name: "Restart"
+  - platform: safe_mode
+    name: "Safe Mode"
+  - platform: factory_reset
+    name: "Factory Reset"
+  - platform: template
+    name: "SCD4x Factory Reset"
+    on_press:
+      - then:
+          - logger.log: "Performing SCD4x Factory Reset"
+          - scd4x.factory_reset: co2_sensor
