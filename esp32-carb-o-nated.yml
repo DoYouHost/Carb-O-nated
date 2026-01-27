@@ -2,8 +2,8 @@
 substitutions:
   API_KEY: "HrnLJeueTkAq4x1BBxR2ugB460w9H+Q50uNPBLgnYK0="
   OTA_PASSWORD: "ean1dkAGQi7sz9J3kGM@JG0v2Yohe930"
-  PROD_MANIFEST_URL: "https://morganmlg.com/carb-o-nated/manifest.json"
-  BETA_MANIFEST_URL: "https://morganmlg.com/carb-o-nated/manifest-beta.json"
+  PROD_MANIFEST_URL: "https://morganmlg.com/Carb-O-nated/manifest.json"
+  BETA_MANIFEST_URL: "https://morganmlg.com/Carb-O-nated/manifest-beta.json"
   WEB_USERNAME: "esphome"
   WEB_PASSWORD: "esphome"
   AP_SSID: "Carb-O-nated"

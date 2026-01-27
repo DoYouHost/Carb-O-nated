@@ -1,4 +1,6 @@
 # 2026.1
+## .3
+- fix: correct manifest URL path casing
 ## .2
 - feat: add factory reset button for SCD4x sensor and status LED configuration
 - feat: add remote theme
