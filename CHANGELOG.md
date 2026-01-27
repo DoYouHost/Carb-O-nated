@@ -1,4 +1,6 @@
 # 2026.1
+## .4
+- fix: invert status LED pin logic
 ## .3
 - fix: correct manifest URL path casing
 ## .2

@@ -396,4 +396,4 @@ button:
 status_led:
   pin:
     number: GPIO17
-    inverted: true
+    inverted: false
