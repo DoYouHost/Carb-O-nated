@@ -31,6 +31,11 @@ esp32:
     version: recommended
     sdkconfig_options:
       CONFIG_ESP32_SPIRAM_SUPPORT: n
+      CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
+      CONFIG_MBEDTLS_DYNAMIC_FREE_PEER_CERT: y
+      CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA: y
+      CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: '8192'
+      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: '8192'
 
 dashboard_import:
   package_import_url: github://DoYouHost/Carb-O-nated/esp32-carb-o-nated.yml@main
@@ -61,6 +66,14 @@ wifi:
   on_connect:
     - lambda: |-
         id(improv_component).stop();
+
+time:
+  - platform: sntp
+    id: sntp_time
+
+http_request:
+  verify_ssl: false
+  follow_redirects: true
 
 captive_portal:
 
