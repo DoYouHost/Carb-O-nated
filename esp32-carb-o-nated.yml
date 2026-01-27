@@ -242,8 +242,6 @@ display:
       CO2Level level = get_co2_level(co2);
       Color sc = level.color;
       const char* status_text = get_co2_level_text(level.type);
-      // int t = millis();
-
       static uint8_t frame = 0;
       
       // === BACKGROUND WITH GRADIENT IMAGE ===
@@ -388,7 +386,14 @@ button:
     name: "Factory Reset"
   - platform: template
     name: "SCD4x Factory Reset"
+    entity_category: config
+    icon: "mdi:restart-alert"
     on_press:
       - then:
           - logger.log: "Performing SCD4x Factory Reset"
           - scd4x.factory_reset: co2_sensor
+
+status_led:
+  pin:
+    number: GPIO17
+    inverted: true
