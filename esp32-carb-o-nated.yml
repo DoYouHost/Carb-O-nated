@@ -8,6 +8,7 @@ substitutions:
   WEB_PASSWORD: "esphome"
   AP_SSID: "Carb-O-nated"
   AP_PASSWORD: "esphome-fallback"
+  DISPLAY_UPDATE_INTERVAL: "200"
 
 esphome:
   name: carb-o-nated
@@ -34,8 +35,10 @@ esp32:
       CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
       CONFIG_MBEDTLS_DYNAMIC_FREE_PEER_CERT: y
       CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA: y
-      CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: '8192'
-      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: '8192'
+      CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: '5120'
+      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: '512'
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_2: y
+      CONFIG_MBEDTLS_TLS_SERVER_AND_CLIENT: y
 
 dashboard_import:
   package_import_url: github://DoYouHost/Carb-O-nated/esp32-carb-o-nated.yml@main
@@ -48,7 +51,7 @@ packages:
       - basic.yaml
       - debug.yaml
       - updateBetaProdStaging.yaml
-      - webServer3.yaml
+      # - webServer3.yaml
       - wifiInfo.yaml
     ref: main
     refresh: 0d
@@ -70,10 +73,6 @@ wifi:
 time:
   - platform: sntp
     id: sntp_time
-
-http_request:
-  verify_ssl: false
-  follow_redirects: true
 
 captive_portal:
 
@@ -98,6 +97,24 @@ api:
 ota:
   - platform: esphome
     password: "${OTA_PASSWORD}"
+  
+  - platform: http_request
+    id: !extend ota_http_request
+    on_begin:
+      - then:
+        - logger.log: 
+            format: "Starting HTTP Request OTA Update"
+            level: INFO
+        - component.suspend: main_display
+        - component.suspend: co2_sensor
+
+    on_error:
+      - then:
+        - logger.log: 
+            format: "HTTP Request OTA Update Failed"
+            level: ERROR
+        - component.resume: main_display
+        - component.resume: co2_sensor
 
 i2c:
   sda: GPIO21
@@ -209,33 +226,34 @@ font:
   - file: "gfonts://Roboto@700"
     id: roboto_bold_60
     size: 60
-    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+    glyphs: "0123456789"
   - file: "gfonts://Roboto@700"
     id: roboto_bold_25
     size: 25
-    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéè"
   - file: "gfonts://Roboto@500"
     id: roboto_medium_20
     size: 20
-    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
-  - file: "gfonts://Roboto"
-    id: roboto_16b
-    size: 16
-    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
-  - file: "gfonts://Roboto"
-    id: roboto_12
-    size: 12
-    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+    glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉"
+  # - file: "gfonts://Roboto"
+  #   id: roboto_16b
+  #   size: 16
+  #   glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
+  # - file: "gfonts://Roboto"
+  #   id: roboto_12
+  #   size: 12
+  #   glyphs: " !\"#$%&'()*+,-./:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉0123456789ąćęłńóśźżäöüßàâéèêëîïôùûçáíñĄĆĘŁŃÓŚŹŻÄÖÜÀÂÉÈÊËÎÏÔÙÛÇÁÍÑ"
 
 display:
   - platform: mipi_spi
+    id: main_display
     model: T-DISPLAY
     dc_pin: GPIO16
     cs_pin: GPIO5
     reset_pin: GPIO23
     rotation: 270°
     data_rate: 80MHz
-    update_interval: 200ms
+    update_interval: ${DISPLAY_UPDATE_INTERVAL}ms
     lambda: |-
       float co2 = id(scd4x_co2).state;
       
