@@ -124,96 +124,35 @@ def create_init_screen():
     print("✓ Created assets/init_screen.png")
 
 def create_bar_segments():
-    """Create pre-rendered bar segment variations"""
+    """Create individual bar segment variations for dynamic bar rendering"""
+    seg_w = 11
+    seg_h = 11
+    
     # Empty segment
-    img = Image.new('RGB', (11, 11), (20, 20, 28))
-    ImageDraw.Draw(img).rectangle([(0, 0), (10, 10)], outline=(45, 45, 55), width=1)
+    img = Image.new('RGBA', (seg_w, seg_h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([(0, 0), (seg_w - 1, seg_h - 1)], fill=(20, 20, 28, 255), outline=(45, 45, 55, 255), width=1)
     img.save('assets/seg_empty.png')
     
-    # Filled segments with different colors (red, yellow, green)
+    # Filled segments with different colors and pulse levels
     colors = [
-        ((255, 0, 0), "red"),      # Poor
-        ((255, 102, 0), "orange"), # Poor
-        ((255, 204, 0), "yellow"), # Moderate
-        ((0, 255, 51), "green"),   # Excellent
+        ((0, 255, 51), "green"),   # Excellent (0-25%)
+        ((255, 204, 0), "yellow"), # Moderate (25-50%)
+        ((255, 102, 0), "orange"), # Poor (50-75%)
+        ((255, 0, 0), "red"),      # Critical (75-100%)
     ]
     
+    pulse_levels = [0.6, 0.75, 0.9, 1.0]  # Animation frames
+    
     for color, name in colors:
-        img = Image.new('RGB', (11, 11), color)
-        ImageDraw.Draw(img).rectangle([(0, 0), (10, 10)], outline=(45, 45, 55), width=1)
-        img.save(f'assets/seg_filled_{name}.png')
-    
-    print("✓ Created assets/seg_*.png")
-
-def create_animated_bar():
-    """Create full segmented bar with animation frames - higher granularity"""
-    seg_w = 11
-    seg_gap = 1
-    segments = 18
-    bar_width = segments * (seg_w + seg_gap) + 7  # Extra space for margins
-    
-    colors = {
-        "red": (255, 0, 0),
-        "orange": (255, 102, 0),
-        "yellow": (255, 204, 0),
-        "green": (0, 255, 51),
-    }
-    
-    # Create animated bars for different fill levels (0-72 for 4x granularity) and animation frames
-    # This allows smoother transitions: each segment can have 4 sub-levels
-    for fill_level in range(0, 73):  # 0-72 sub-levels (18 segments * 4)
-        for frame in range(4):  # 4 animation frames for pulse
-            img = Image.new('RGBA', (bar_width, 11), (0, 0, 0, 0))  # Transparent background
+        for frame, pulse in enumerate(pulse_levels):
+            pulse_color = tuple(int(c * pulse) for c in color)
+            img = Image.new('RGBA', (seg_w, seg_h), (0, 0, 0, 0))
             draw = ImageDraw.Draw(img)
-            
-            # Convert sub-level to segment + partial fill
-            segment_idx = fill_level // 4  # Which segment
-            segment_partial = fill_level % 4  # Partial fill within segment (0-3)
-            
-            # Determine color based on fill level
-            if fill_level <= 6:
-                color = colors["green"]
-            elif fill_level <= 20:
-                color = colors["yellow"]
-            elif fill_level <= 56:
-                color = colors["orange"]
-            else:
-                color = colors["red"]
-            
-            bar_x = 7
-            for s in range(segments):
-                sx = bar_x + s * (seg_w + seg_gap)
-                
-                if s < segment_idx:
-                    # Fully filled segment - show the color
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=(*color, 255))
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55, 255), width=1)
-                elif s == segment_idx and segment_partial > 0:
-                    # Partially filled segment - dark background + partial color
-                    partial_w = int((seg_w - 1) * segment_partial / 4)
-                    # Fill entire segment background
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=(20, 20, 28, 255))
-                    if partial_w > 0:
-                        # Pulse animation on partial segment
-                        if frame == 0:
-                            pulse_color = tuple(int(c * 0.6) for c in color)
-                        elif frame == 1:
-                            pulse_color = tuple(int(c * 0.75) for c in color)
-                        elif frame == 2:
-                            pulse_color = tuple(int(c * 0.9) for c in color)
-                        else:
-                            pulse_color = color
-                        
-                        draw.rectangle([(sx, 0), (sx + partial_w, 10)], fill=(*pulse_color, 255))
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55, 255), width=1)
-                else:
-                    # Empty segment - just dark background + border
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], fill=(20, 20, 28, 255))
-                    draw.rectangle([(sx, 0), (sx + seg_w - 1, 10)], outline=(45, 45, 55, 255), width=1)
-            
-            img.save(f'assets/bar_animated_{fill_level:02d}_{frame}.png')
+            draw.rectangle([(0, 0), (seg_w - 1, seg_h - 1)], fill=(*pulse_color, 255), outline=(45, 45, 55, 255), width=1)
+            img.save(f'assets/seg_{name}_{frame}.png')
     
-    print(f"✓ Created assets/bar_animated_*.png (73 fill levels × 4 frames = 292 assets)")
+    print("✓ Created assets/seg_*.png (4 colors × 4 pulse frames = 16 segments + 1 empty = 17 assets)")
 
 def create_corner_brackets():
     """Create corner bracket decorations"""
@@ -239,11 +178,8 @@ def create_corner_brackets():
 if __name__ == '__main__':
     print("Generating bitmap assets...")
     create_background_gradient()
-    # create_glow_bars()
     create_particles()
-    # create_connectors()
     create_init_screen()
-    # create_bar_segments()
-    create_animated_bar()
+    create_bar_segments()  # New: 17 minimal segments instead of 292 full bars
     create_corner_brackets()
     print("\n✓ All assets generated successfully!")

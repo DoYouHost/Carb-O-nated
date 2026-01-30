@@ -32,13 +32,14 @@ esp32:
     version: recommended
     sdkconfig_options:
       CONFIG_ESP32_SPIRAM_SUPPORT: n
-      CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
-      CONFIG_MBEDTLS_DYNAMIC_FREE_PEER_CERT: y
-      CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA: y
-      CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: '5120'
-      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: '512'
-      CONFIG_MBEDTLS_SSL_PROTO_TLS1_2: y
-      CONFIG_MBEDTLS_TLS_SERVER_AND_CLIENT: y
+      # CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
+      # CONFIG_MBEDTLS_DYNAMIC_FREE_PEER_CERT: y
+      # CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA: y
+      # CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN: '8192'
+      # CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: '512'
+      # CONFIG_MBEDTLS_SSL_PROTO_TLS1_2: y
+      # CONFIG_MBEDTLS_TLS_SERVER_AND_CLIENT: y
+      # CONFIG_ESP_TASK_WDT_TIMEOUT_S: '60'
 
 dashboard_import:
   package_import_url: github://DoYouHost/Carb-O-nated/esp32-carb-o-nated.yml@main
@@ -93,6 +94,11 @@ api:
         pressure_mbar: int
       then:
         - lambda: "id(co2_sensor)->set_ambient_pressure_compensation(pressure_mbar);"
+
+http_request:
+  id: http_request_component
+  follow_redirects: true
+  verify_ssl: true
 
 ota:
   - platform: esphome
@@ -286,90 +292,66 @@ display:
       it.printf(120 - depth, 22, id(roboto_bold_60), sc, 
         TextAlign::TOP_CENTER, "%.0f", co2);
       
-      // === SEGMENTED BAR ===
+      // === SEGMENTED BAR (Dynamic rendering from individual segments) ===
       int max_co2 = 3000;
       float pct = min(1.0f, co2 / max_co2);
       int segments = 18;
-      int filled = (int)((segments * 4) * pct);
-      if (filled > 72) filled = 72;
+      int filled_quarters = (int)((segments * 4) * pct);
+      if (filled_quarters > 72) filled_quarters = 72;
       int anim_frame = frame % 4;
       
-      switch(filled) {
-        case 0: it.image(7, 97, anim_frame == 0 ? id(bar_00_0) : anim_frame == 1 ? id(bar_00_1) : anim_frame == 2 ? id(bar_00_2) : id(bar_00_3)); break;
-        case 1: it.image(7, 97, anim_frame == 0 ? id(bar_01_0) : anim_frame == 1 ? id(bar_01_1) : anim_frame == 2 ? id(bar_01_2) : id(bar_01_3)); break;
-        case 2: it.image(7, 97, anim_frame == 0 ? id(bar_02_0) : anim_frame == 1 ? id(bar_02_1) : anim_frame == 2 ? id(bar_02_2) : id(bar_02_3)); break;
-        case 3: it.image(7, 97, anim_frame == 0 ? id(bar_03_0) : anim_frame == 1 ? id(bar_03_1) : anim_frame == 2 ? id(bar_03_2) : id(bar_03_3)); break;
-        case 4: it.image(7, 97, anim_frame == 0 ? id(bar_04_0) : anim_frame == 1 ? id(bar_04_1) : anim_frame == 2 ? id(bar_04_2) : id(bar_04_3)); break;
-        case 5: it.image(7, 97, anim_frame == 0 ? id(bar_05_0) : anim_frame == 1 ? id(bar_05_1) : anim_frame == 2 ? id(bar_05_2) : id(bar_05_3)); break;
-        case 6: it.image(7, 97, anim_frame == 0 ? id(bar_06_0) : anim_frame == 1 ? id(bar_06_1) : anim_frame == 2 ? id(bar_06_2) : id(bar_06_3)); break;
-        case 7: it.image(7, 97, anim_frame == 0 ? id(bar_07_0) : anim_frame == 1 ? id(bar_07_1) : anim_frame == 2 ? id(bar_07_2) : id(bar_07_3)); break;
-        case 8: it.image(7, 97, anim_frame == 0 ? id(bar_08_0) : anim_frame == 1 ? id(bar_08_1) : anim_frame == 2 ? id(bar_08_2) : id(bar_08_3)); break;
-        case 9: it.image(7, 97, anim_frame == 0 ? id(bar_09_0) : anim_frame == 1 ? id(bar_09_1) : anim_frame == 2 ? id(bar_09_2) : id(bar_09_3)); break;
-        case 10: it.image(7, 97, anim_frame == 0 ? id(bar_10_0) : anim_frame == 1 ? id(bar_10_1) : anim_frame == 2 ? id(bar_10_2) : id(bar_10_3)); break;
-        case 11: it.image(7, 97, anim_frame == 0 ? id(bar_11_0) : anim_frame == 1 ? id(bar_11_1) : anim_frame == 2 ? id(bar_11_2) : id(bar_11_3)); break;
-        case 12: it.image(7, 97, anim_frame == 0 ? id(bar_12_0) : anim_frame == 1 ? id(bar_12_1) : anim_frame == 2 ? id(bar_12_2) : id(bar_12_3)); break;
-        case 13: it.image(7, 97, anim_frame == 0 ? id(bar_13_0) : anim_frame == 1 ? id(bar_13_1) : anim_frame == 2 ? id(bar_13_2) : id(bar_13_3)); break;
-        case 14: it.image(7, 97, anim_frame == 0 ? id(bar_14_0) : anim_frame == 1 ? id(bar_14_1) : anim_frame == 2 ? id(bar_14_2) : id(bar_14_3)); break;
-        case 15: it.image(7, 97, anim_frame == 0 ? id(bar_15_0) : anim_frame == 1 ? id(bar_15_1) : anim_frame == 2 ? id(bar_15_2) : id(bar_15_3)); break;
-        case 16: it.image(7, 97, anim_frame == 0 ? id(bar_16_0) : anim_frame == 1 ? id(bar_16_1) : anim_frame == 2 ? id(bar_16_2) : id(bar_16_3)); break;
-        case 17: it.image(7, 97, anim_frame == 0 ? id(bar_17_0) : anim_frame == 1 ? id(bar_17_1) : anim_frame == 2 ? id(bar_17_2) : id(bar_17_3)); break;
-        case 18: it.image(7, 97, anim_frame == 0 ? id(bar_18_0) : anim_frame == 1 ? id(bar_18_1) : anim_frame == 2 ? id(bar_18_2) : id(bar_18_3)); break;
-        case 19: it.image(7, 97, anim_frame == 0 ? id(bar_19_0) : anim_frame == 1 ? id(bar_19_1) : anim_frame == 2 ? id(bar_19_2) : id(bar_19_3)); break;
-        case 20: it.image(7, 97, anim_frame == 0 ? id(bar_20_0) : anim_frame == 1 ? id(bar_20_1) : anim_frame == 2 ? id(bar_20_2) : id(bar_20_3)); break;
-        case 21: it.image(7, 97, anim_frame == 0 ? id(bar_21_0) : anim_frame == 1 ? id(bar_21_1) : anim_frame == 2 ? id(bar_21_2) : id(bar_21_3)); break;
-        case 22: it.image(7, 97, anim_frame == 0 ? id(bar_22_0) : anim_frame == 1 ? id(bar_22_1) : anim_frame == 2 ? id(bar_22_2) : id(bar_22_3)); break;
-        case 23: it.image(7, 97, anim_frame == 0 ? id(bar_23_0) : anim_frame == 1 ? id(bar_23_1) : anim_frame == 2 ? id(bar_23_2) : id(bar_23_3)); break;
-        case 24: it.image(7, 97, anim_frame == 0 ? id(bar_24_0) : anim_frame == 1 ? id(bar_24_1) : anim_frame == 2 ? id(bar_24_2) : id(bar_24_3)); break;
-        case 25: it.image(7, 97, anim_frame == 0 ? id(bar_25_0) : anim_frame == 1 ? id(bar_25_1) : anim_frame == 2 ? id(bar_25_2) : id(bar_25_3)); break;
-        case 26: it.image(7, 97, anim_frame == 0 ? id(bar_26_0) : anim_frame == 1 ? id(bar_26_1) : anim_frame == 2 ? id(bar_26_2) : id(bar_26_3)); break;
-        case 27: it.image(7, 97, anim_frame == 0 ? id(bar_27_0) : anim_frame == 1 ? id(bar_27_1) : anim_frame == 2 ? id(bar_27_2) : id(bar_27_3)); break;
-        case 28: it.image(7, 97, anim_frame == 0 ? id(bar_28_0) : anim_frame == 1 ? id(bar_28_1) : anim_frame == 2 ? id(bar_28_2) : id(bar_28_3)); break;
-        case 29: it.image(7, 97, anim_frame == 0 ? id(bar_29_0) : anim_frame == 1 ? id(bar_29_1) : anim_frame == 2 ? id(bar_29_2) : id(bar_29_3)); break;
-        case 30: it.image(7, 97, anim_frame == 0 ? id(bar_30_0) : anim_frame == 1 ? id(bar_30_1) : anim_frame == 2 ? id(bar_30_2) : id(bar_30_3)); break;
-        case 31: it.image(7, 97, anim_frame == 0 ? id(bar_31_0) : anim_frame == 1 ? id(bar_31_1) : anim_frame == 2 ? id(bar_31_2) : id(bar_31_3)); break;
-        case 32: it.image(7, 97, anim_frame == 0 ? id(bar_32_0) : anim_frame == 1 ? id(bar_32_1) : anim_frame == 2 ? id(bar_32_2) : id(bar_32_3)); break;
-        case 33: it.image(7, 97, anim_frame == 0 ? id(bar_33_0) : anim_frame == 1 ? id(bar_33_1) : anim_frame == 2 ? id(bar_33_2) : id(bar_33_3)); break;
-        case 34: it.image(7, 97, anim_frame == 0 ? id(bar_34_0) : anim_frame == 1 ? id(bar_34_1) : anim_frame == 2 ? id(bar_34_2) : id(bar_34_3)); break;
-        case 35: it.image(7, 97, anim_frame == 0 ? id(bar_35_0) : anim_frame == 1 ? id(bar_35_1) : anim_frame == 2 ? id(bar_35_2) : id(bar_35_3)); break;
-        case 36: it.image(7, 97, anim_frame == 0 ? id(bar_36_0) : anim_frame == 1 ? id(bar_36_1) : anim_frame == 2 ? id(bar_36_2) : id(bar_36_3)); break;
-        case 37: it.image(7, 97, anim_frame == 0 ? id(bar_37_0) : anim_frame == 1 ? id(bar_37_1) : anim_frame == 2 ? id(bar_37_2) : id(bar_37_3)); break;
-        case 38: it.image(7, 97, anim_frame == 0 ? id(bar_38_0) : anim_frame == 1 ? id(bar_38_1) : anim_frame == 2 ? id(bar_38_2) : id(bar_38_3)); break;
-        case 39: it.image(7, 97, anim_frame == 0 ? id(bar_39_0) : anim_frame == 1 ? id(bar_39_1) : anim_frame == 2 ? id(bar_39_2) : id(bar_39_3)); break;
-        case 40: it.image(7, 97, anim_frame == 0 ? id(bar_40_0) : anim_frame == 1 ? id(bar_40_1) : anim_frame == 2 ? id(bar_40_2) : id(bar_40_3)); break;
-        case 41: it.image(7, 97, anim_frame == 0 ? id(bar_41_0) : anim_frame == 1 ? id(bar_41_1) : anim_frame == 2 ? id(bar_41_2) : id(bar_41_3)); break;
-        case 42: it.image(7, 97, anim_frame == 0 ? id(bar_42_0) : anim_frame == 1 ? id(bar_42_1) : anim_frame == 2 ? id(bar_42_2) : id(bar_42_3)); break;
-        case 43: it.image(7, 97, anim_frame == 0 ? id(bar_43_0) : anim_frame == 1 ? id(bar_43_1) : anim_frame == 2 ? id(bar_43_2) : id(bar_43_3)); break;
-        case 44: it.image(7, 97, anim_frame == 0 ? id(bar_44_0) : anim_frame == 1 ? id(bar_44_1) : anim_frame == 2 ? id(bar_44_2) : id(bar_44_3)); break;
-        case 45: it.image(7, 97, anim_frame == 0 ? id(bar_45_0) : anim_frame == 1 ? id(bar_45_1) : anim_frame == 2 ? id(bar_45_2) : id(bar_45_3)); break;
-        case 46: it.image(7, 97, anim_frame == 0 ? id(bar_46_0) : anim_frame == 1 ? id(bar_46_1) : anim_frame == 2 ? id(bar_46_2) : id(bar_46_3)); break;
-        case 47: it.image(7, 97, anim_frame == 0 ? id(bar_47_0) : anim_frame == 1 ? id(bar_47_1) : anim_frame == 2 ? id(bar_47_2) : id(bar_47_3)); break;
-        case 48: it.image(7, 97, anim_frame == 0 ? id(bar_48_0) : anim_frame == 1 ? id(bar_48_1) : anim_frame == 2 ? id(bar_48_2) : id(bar_48_3)); break;
-        case 49: it.image(7, 97, anim_frame == 0 ? id(bar_49_0) : anim_frame == 1 ? id(bar_49_1) : anim_frame == 2 ? id(bar_49_2) : id(bar_49_3)); break;
-        case 50: it.image(7, 97, anim_frame == 0 ? id(bar_50_0) : anim_frame == 1 ? id(bar_50_1) : anim_frame == 2 ? id(bar_50_2) : id(bar_50_3)); break;
-        case 51: it.image(7, 97, anim_frame == 0 ? id(bar_51_0) : anim_frame == 1 ? id(bar_51_1) : anim_frame == 2 ? id(bar_51_2) : id(bar_51_3)); break;
-        case 52: it.image(7, 97, anim_frame == 0 ? id(bar_52_0) : anim_frame == 1 ? id(bar_52_1) : anim_frame == 2 ? id(bar_52_2) : id(bar_52_3)); break;
-        case 53: it.image(7, 97, anim_frame == 0 ? id(bar_53_0) : anim_frame == 1 ? id(bar_53_1) : anim_frame == 2 ? id(bar_53_2) : id(bar_53_3)); break;
-        case 54: it.image(7, 97, anim_frame == 0 ? id(bar_54_0) : anim_frame == 1 ? id(bar_54_1) : anim_frame == 2 ? id(bar_54_2) : id(bar_54_3)); break;
-        case 55: it.image(7, 97, anim_frame == 0 ? id(bar_55_0) : anim_frame == 1 ? id(bar_55_1) : anim_frame == 2 ? id(bar_55_2) : id(bar_55_3)); break;
-        case 56: it.image(7, 97, anim_frame == 0 ? id(bar_56_0) : anim_frame == 1 ? id(bar_56_1) : anim_frame == 2 ? id(bar_56_2) : id(bar_56_3)); break;
-        case 57: it.image(7, 97, anim_frame == 0 ? id(bar_57_0) : anim_frame == 1 ? id(bar_57_1) : anim_frame == 2 ? id(bar_57_2) : id(bar_57_3)); break;
-        case 58: it.image(7, 97, anim_frame == 0 ? id(bar_58_0) : anim_frame == 1 ? id(bar_58_1) : anim_frame == 2 ? id(bar_58_2) : id(bar_58_3)); break;
-        case 59: it.image(7, 97, anim_frame == 0 ? id(bar_59_0) : anim_frame == 1 ? id(bar_59_1) : anim_frame == 2 ? id(bar_59_2) : id(bar_59_3)); break;
-        case 60: it.image(7, 97, anim_frame == 0 ? id(bar_60_0) : anim_frame == 1 ? id(bar_60_1) : anim_frame == 2 ? id(bar_60_2) : id(bar_60_3)); break;
-        case 61: it.image(7, 97, anim_frame == 0 ? id(bar_61_0) : anim_frame == 1 ? id(bar_61_1) : anim_frame == 2 ? id(bar_61_2) : id(bar_61_3)); break;
-        case 62: it.image(7, 97, anim_frame == 0 ? id(bar_62_0) : anim_frame == 1 ? id(bar_62_1) : anim_frame == 2 ? id(bar_62_2) : id(bar_62_3)); break;
-        case 63: it.image(7, 97, anim_frame == 0 ? id(bar_63_0) : anim_frame == 1 ? id(bar_63_1) : anim_frame == 2 ? id(bar_63_2) : id(bar_63_3)); break;
-        case 64: it.image(7, 97, anim_frame == 0 ? id(bar_64_0) : anim_frame == 1 ? id(bar_64_1) : anim_frame == 2 ? id(bar_64_2) : id(bar_64_3)); break;
-        case 65: it.image(7, 97, anim_frame == 0 ? id(bar_65_0) : anim_frame == 1 ? id(bar_65_1) : anim_frame == 2 ? id(bar_65_2) : id(bar_65_3)); break;
-        case 66: it.image(7, 97, anim_frame == 0 ? id(bar_66_0) : anim_frame == 1 ? id(bar_66_1) : anim_frame == 2 ? id(bar_66_2) : id(bar_66_3)); break;
-        case 67: it.image(7, 97, anim_frame == 0 ? id(bar_67_0) : anim_frame == 1 ? id(bar_67_1) : anim_frame == 2 ? id(bar_67_2) : id(bar_67_3)); break;
-        case 68: it.image(7, 97, anim_frame == 0 ? id(bar_68_0) : anim_frame == 1 ? id(bar_68_1) : anim_frame == 2 ? id(bar_68_2) : id(bar_68_3)); break;
-        case 69: it.image(7, 97, anim_frame == 0 ? id(bar_69_0) : anim_frame == 1 ? id(bar_69_1) : anim_frame == 2 ? id(bar_69_2) : id(bar_69_3)); break;
-        case 70: it.image(7, 97, anim_frame == 0 ? id(bar_70_0) : anim_frame == 1 ? id(bar_70_1) : anim_frame == 2 ? id(bar_70_2) : id(bar_70_3)); break;
-        case 71: it.image(7, 97, anim_frame == 0 ? id(bar_71_0) : anim_frame == 1 ? id(bar_71_1) : anim_frame == 2 ? id(bar_71_2) : id(bar_71_3)); break;
-        case 72: it.image(7, 97, anim_frame == 0 ? id(bar_72_0) : anim_frame == 1 ? id(bar_72_1) : anim_frame == 2 ? id(bar_72_2) : id(bar_72_3)); break;
+      int seg_w = 11;
+      int seg_gap = 1;
+      int bar_x = 7;
+      
+      // Determine color based on fill level
+      const char* color_name;
+      if (filled_quarters <= 6) color_name = "green";
+      else if (filled_quarters <= 20) color_name = "yellow";
+      else if (filled_quarters <= 56) color_name = "orange";
+      else color_name = "red";
+      
+      // Draw all segments
+      for (int s = 0; s < segments; s++) {
+        int sx = bar_x + s * (seg_w + seg_gap);
+        int filled_quarters_for_segment = s * 4;
+        
+        if (filled_quarters_for_segment + 4 <= filled_quarters) {
+          // Segment is fully filled
+          if (color_name[0] == 'g') it.image(sx, 97, id(seg_green_3));
+          else if (color_name[0] == 'y') it.image(sx, 97, id(seg_yellow_3));
+          else if (color_name[0] == 'o') it.image(sx, 97, id(seg_orange_3));
+          else it.image(sx, 97, id(seg_red_3));
+        } else if (filled_quarters_for_segment < filled_quarters) {
+          // Segment is partially filled - select frame based on anim_frame
+          if (color_name[0] == 'g') {
+            if (anim_frame == 0) it.image(sx, 97, id(seg_green_0));
+            else if (anim_frame == 1) it.image(sx, 97, id(seg_green_1));
+            else if (anim_frame == 2) it.image(sx, 97, id(seg_green_2));
+            else it.image(sx, 97, id(seg_green_3));
+          } else if (color_name[0] == 'y') {
+            if (anim_frame == 0) it.image(sx, 97, id(seg_yellow_0));
+            else if (anim_frame == 1) it.image(sx, 97, id(seg_yellow_1));
+            else if (anim_frame == 2) it.image(sx, 97, id(seg_yellow_2));
+            else it.image(sx, 97, id(seg_yellow_3));
+          } else if (color_name[0] == 'o') {
+            if (anim_frame == 0) it.image(sx, 97, id(seg_orange_0));
+            else if (anim_frame == 1) it.image(sx, 97, id(seg_orange_1));
+            else if (anim_frame == 2) it.image(sx, 97, id(seg_orange_2));
+            else it.image(sx, 97, id(seg_orange_3));
+          } else {
+            if (anim_frame == 0) it.image(sx, 97, id(seg_red_0));
+            else if (anim_frame == 1) it.image(sx, 97, id(seg_red_1));
+            else if (anim_frame == 2) it.image(sx, 97, id(seg_red_2));
+            else it.image(sx, 97, id(seg_red_3));
+          }
+        } else {
+          // Empty segment
+          it.image(sx, 97, id(seg_empty));
+        }
       }
       
+
       // === BOTTOM INFO BAR (y: 114-132, safe zone) ===
       // Animated particles near "ppm CO2" text
       int particle_frame = frame % 8;  // 8 frame particle animation
