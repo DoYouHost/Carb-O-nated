@@ -6,3 +6,4 @@
 /.venv/
 .sync-exclude.lst
 *.code-workspace
+.claude/
