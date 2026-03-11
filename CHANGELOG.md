@@ -1,4 +1,6 @@
 # 2026.3
+## .1
+- feat: update to ESPHome 2026.2.4
 ## .0
 - fix: switch SCD4x to periodic mode with tuned filters
   - measurement_mode: single_shot → periodic (5s cadence)
