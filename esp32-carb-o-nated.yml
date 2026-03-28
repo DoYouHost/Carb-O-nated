@@ -22,6 +22,17 @@ esphome:
     - co2_levels.h
     - translations.h
     - lookup_tables.h
+  on_boot:
+    priority: 300
+    then:
+      - lambda: |-
+          id(switch_buzzer).turn_on();
+          delay(100);
+          id(switch_buzzer).turn_off();
+          delay(500);
+          id(switch_buzzer).turn_on();
+          delay(100);
+          id(switch_buzzer).turn_off();
 
 esp32:
   board: esp32dev
@@ -127,6 +138,10 @@ output:
   - platform: ledc
     pin: GPIO4
     id: output_display_backlight
+
+  - platform: gpio
+    pin: GPIO2
+    id: output_buzzer
 
 light:
   - platform: monochromatic
@@ -393,3 +408,15 @@ status_led:
   pin:
     number: GPIO17
     inverted: false
+
+switch:
+  - platform: template
+    id: switch_buzzer
+    name: "Buzzer"
+    icon: "mdi:volume-high"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - output.turn_on: output_buzzer
+    turn_off_action:
+      - output.turn_off: output_buzzer
