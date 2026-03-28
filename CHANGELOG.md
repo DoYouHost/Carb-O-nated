@@ -1,4 +1,6 @@
 # 2026.3
+## .3
+- fix: remove improv authorizer requirement
 ## .2
 - feat: add buzzer support and update ESPHome to 2026.3.1
 ## .1

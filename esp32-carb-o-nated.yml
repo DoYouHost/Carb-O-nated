@@ -83,7 +83,7 @@ improv_serial:
 
 esp32_improv:
   id: improv_component
-  authorizer: button_b
+  authorizer: none
 
 api:
   reboot_timeout: 15min
