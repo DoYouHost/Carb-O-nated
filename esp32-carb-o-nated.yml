@@ -124,6 +124,17 @@ ota:
         - component.resume: main_display
         - component.resume: co2_sensor
 
+globals:
+  - id: temperature_offset
+    type: float
+    restore_value: true
+    initial_value: '0.0'
+
+  - id: humidity_offset
+    type: float
+    restore_value: true
+    initial_value: '0.0'
+
 i2c:
   sda: GPIO21
   scl: GPIO22
@@ -183,7 +194,8 @@ sensor:
             alpha: 0.3
             send_every: 6
     temperature:
-      name: "SCD4x Temperature"
+      id: scd4x_temperature
+      internal: true
       unit_of_measurement: "°C"
       filters:
         - skip_initial: 12
@@ -191,13 +203,30 @@ sensor:
             alpha: 0.3
             send_every: 6
     humidity:
-      name: "SCD4x Humidity"
+      id: scd4x_humidity
+      internal: true
       unit_of_measurement: "%"
       filters:
         - skip_initial: 12
         - exponential_moving_average:
             alpha: 0.3
             send_every: 6
+
+  - platform: copy
+    source_id: scd4x_temperature
+    id: scd4x_temperature_copy
+    name: "SCD4x Temperature"
+    filters:
+      - lambda: |-
+          return x + id(temperature_offset);
+
+  - platform: copy
+    source_id: scd4x_humidity
+    id: scd4x_humidity_copy
+    name: "SCD4x Humidity"
+    filters:
+      - lambda: |-
+          return x + id(humidity_offset);
 
 text_sensor:
   - platform: template
@@ -233,6 +262,39 @@ select:
             else if (x == "Deutsch") current_language = LANG_DE;
             else if (x == "Français") current_language = LANG_FR;
             else if (x == "Español") current_language = LANG_ES;
+
+number:
+  - platform: template
+    name: "Temperature Offset"
+    id: temperature_offset_number
+    icon: "mdi:thermometer"
+    unit_of_measurement: "°C"
+    step: 0.1
+    min_value: -10.0
+    max_value: 10.0
+    restore_value: true
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            id(temperature_offset) = x;
+            id(scd4x_temperature_copy).publish_state(id(scd4x_temperature).state + x);
+
+  - platform: template
+    name: "Humidity Offset"
+    id: humidity_offset_number
+    icon: "mdi:water-percent"
+    unit_of_measurement: "%"
+    step: 0.1
+    min_value: -20.0
+    max_value: 20.0
+    restore_value: true
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            id(humidity_offset) = x;
+            id(scd4x_humidity_copy).publish_state(id(scd4x_humidity).state + x);
 
 font:
   - file: "gfonts://Roboto@700"

@@ -1,4 +1,6 @@
 # 2026.3
+## .4
+- feat: add temperature and humidity calibration offsets
 ## .3
 - fix: remove improv authorizer requirement
 ## .2
