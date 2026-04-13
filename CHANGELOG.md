@@ -1,4 +1,7 @@
 # 2026.3
+## .5
+- fix: initial value for humidity and temperature
+- feat: update to ESPHome 2026.3.3
 ## .4
 - feat: add temperature and humidity calibration offsets
 ## .3

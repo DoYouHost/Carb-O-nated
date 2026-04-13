@@ -272,6 +272,8 @@ number:
     step: 0.1
     min_value: -10.0
     max_value: 10.0
+    initial_value: 0.0
+    mode: box
     restore_value: true
     optimistic: true
     on_value:
@@ -288,6 +290,8 @@ number:
     step: 0.1
     min_value: -20.0
     max_value: 20.0
+    mode: box
+    initial_value: 0.0
     restore_value: true
     optimistic: true
     on_value:
