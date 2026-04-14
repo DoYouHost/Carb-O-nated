@@ -1,4 +1,6 @@
 # 2026.3
+## .6 
+- fix: correct offset value for temperature and humidity
 ## .5
 - fix: initial value for humidity and temperature
 - feat: update to ESPHome 2026.3.3
