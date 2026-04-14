@@ -280,7 +280,6 @@ number:
       then:
         - lambda: |-
             id(temperature_offset) = x;
-            id(scd4x_temperature_copy).publish_state(id(scd4x_temperature).state + x);
 
   - platform: template
     name: "Humidity Offset"
@@ -298,7 +297,6 @@ number:
       then:
         - lambda: |-
             id(humidity_offset) = x;
-            id(scd4x_humidity_copy).publish_state(id(scd4x_humidity).state + x);
 
 font:
   - file: "gfonts://Roboto@700"
