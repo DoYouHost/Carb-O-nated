@@ -149,6 +149,7 @@ output:
 
 light:
   - platform: monochromatic
+    id: display_backlight
     name: "Display Backlight"
     output: output_display_backlight
     restore_mode: RESTORE_DEFAULT_ON
