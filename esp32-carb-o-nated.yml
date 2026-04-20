@@ -162,7 +162,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     filters:
-      - delayed_ono_off: 20ms
+      - delayed_on_off: 20ms
     on_press:
       - then:
           - script.execute: buzzer_beep_short
@@ -175,7 +175,7 @@ binary_sensor:
       number: GPIO35
       inverted: true
     filters:
-      - delayed_ono_off: 20ms
+      - delayed_on_off: 20ms
     on_press:
       - then:
           - script.execute: buzzer_beep_short
