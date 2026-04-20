@@ -1,3 +1,8 @@
+
+# 2026.4
+## .0
+- feat: update to ESPHome 2026.4.1
+- feat: add display backlight toggle to Button A
 # 2026.3
 ## .6 
 - fix: correct offset value for temperature and humidity
