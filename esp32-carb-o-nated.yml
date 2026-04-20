@@ -21,7 +21,7 @@ esphome:
   includes:
     - co2_levels.h
     - translations.h
-    - lookup_tables.h
+    - display_helpers.h
   on_boot:
     priority: 300
     then:
@@ -51,8 +51,6 @@ packages:
       - wifiInfo.yaml
     ref: main
     refresh: 0d
-  
-  assets: !include assets.yaml
 
 wifi:
   reboot_timeout: 15min
@@ -331,106 +329,50 @@ display:
       float co2 = id(scd4x_co2).state;
       
       if (isnan(co2)) {
-        it.image(0, 0, id(init_screen));
-        int angle = (millis() / 50) % 360;
+        it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
+        constexpr float DEG2RAD = 0.01745329f;
+        float base_deg = millis() * 0.025f;  // ~14.4s per full rotation (~5°/frame)
         for (int i = 0; i < 8; i++) {
-          int a = (angle + i * 45) % 360;
-          int x = 120 + (int)(25 * cos_lut[a]);
-          int y = 67 + (int)(25 * sin_lut[a]);
+          float rad = (base_deg + i * 45.0f) * DEG2RAD;
+          int x = 120 + (int)(25.0f * cosf(rad));
+          int y = 67 + (int)(25.0f * sinf(rad));
           it.filled_circle(x, y, 4, Color(100 + i*20, 100 + i*20, 255));
         }
         it.print(120, 100, id(roboto_medium_20), Color(180, 180, 255), TextAlign::TOP_CENTER, get_initializing());
         return;
       }
       
-      CO2Level level = get_co2_level(co2);
+      CO2Level level = get_co2_level_cached(co2);
       Color sc = level.color;
       const char* status_text = get_co2_level_text(level.type);
       static uint8_t frame = 0;
-      
-      // === BACKGROUND WITH GRADIENT IMAGE ===
-      it.image(0, 0, id(bg_gradient));
-      
+
+      // === BACKGROUND ===
+      it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
+
       // === TOP STATUS TEXT ===
       it.print(120, 3, id(roboto_bold_25), sc, TextAlign::TOP_CENTER, status_text);
-      
+
       // === MAIN CO2 VALUE ===
       int depth = frame % 2;
-      it.printf(120 - depth, 22, id(roboto_bold_60), sc, 
+      it.printf(120 - depth, 22, id(roboto_bold_60), sc,
         TextAlign::TOP_CENTER, "%.0f", co2);
-      
-      // === SEGMENTED BAR (Dynamic rendering from individual segments) ===
-      int max_co2 = 3000;
-      float pct = min(1.0f, co2 / max_co2);
-      int segments = 18;
-      int filled_quarters = (int)((segments * 4) * pct);
-      if (filled_quarters > 72) filled_quarters = 72;
-      int anim_frame = frame % 4;
-      
-      int seg_w = 11;
-      int seg_gap = 1;
-      int bar_x = 7;
-      
-      // Determine color based on fill level
-      const char* color_name;
-      if (filled_quarters <= 6) color_name = "green";
-      else if (filled_quarters <= 20) color_name = "yellow";
-      else if (filled_quarters <= 56) color_name = "orange";
-      else color_name = "red";
-      
-      // Draw all segments
-      for (int s = 0; s < segments; s++) {
-        int sx = bar_x + s * (seg_w + seg_gap);
-        int filled_quarters_for_segment = s * 4;
-        
-        if (filled_quarters_for_segment + 4 <= filled_quarters) {
-          // Segment is fully filled
-          if (color_name[0] == 'g') it.image(sx, 97, id(seg_green_3));
-          else if (color_name[0] == 'y') it.image(sx, 97, id(seg_yellow_3));
-          else if (color_name[0] == 'o') it.image(sx, 97, id(seg_orange_3));
-          else it.image(sx, 97, id(seg_red_3));
-        } else if (filled_quarters_for_segment < filled_quarters) {
-          // Segment is partially filled - select frame based on anim_frame
-          if (color_name[0] == 'g') {
-            if (anim_frame == 0) it.image(sx, 97, id(seg_green_0));
-            else if (anim_frame == 1) it.image(sx, 97, id(seg_green_1));
-            else if (anim_frame == 2) it.image(sx, 97, id(seg_green_2));
-            else it.image(sx, 97, id(seg_green_3));
-          } else if (color_name[0] == 'y') {
-            if (anim_frame == 0) it.image(sx, 97, id(seg_yellow_0));
-            else if (anim_frame == 1) it.image(sx, 97, id(seg_yellow_1));
-            else if (anim_frame == 2) it.image(sx, 97, id(seg_yellow_2));
-            else it.image(sx, 97, id(seg_yellow_3));
-          } else if (color_name[0] == 'o') {
-            if (anim_frame == 0) it.image(sx, 97, id(seg_orange_0));
-            else if (anim_frame == 1) it.image(sx, 97, id(seg_orange_1));
-            else if (anim_frame == 2) it.image(sx, 97, id(seg_orange_2));
-            else it.image(sx, 97, id(seg_orange_3));
-          } else {
-            if (anim_frame == 0) it.image(sx, 97, id(seg_red_0));
-            else if (anim_frame == 1) it.image(sx, 97, id(seg_red_1));
-            else if (anim_frame == 2) it.image(sx, 97, id(seg_red_2));
-            else it.image(sx, 97, id(seg_red_3));
-          }
-        } else {
-          // Empty segment
-          it.image(sx, 97, id(seg_empty));
-        }
-      }
+
+      // === SEGMENTED BAR ===
+      draw_co2_bar(it, co2, sc, Color(40, 40, 45));
       
 
       // === BOTTOM INFO BAR (y: 114-132, safe zone) ===
-      // Animated particles near "ppm CO2" text
-      int particle_frame = frame % 8;  // 8 frame particle animation
-      switch(particle_frame) {
-        case 0: it.image(45, 110, id(particles_0)); break;
-        case 1: it.image(45, 110, id(particles_1)); break;
-        case 2: it.image(45, 110, id(particles_2)); break;
-        case 3: it.image(45, 110, id(particles_3)); break;
-        case 4: it.image(45, 110, id(particles_4)); break;
-        case 5: it.image(45, 110, id(particles_5)); break;
-        case 6: it.image(45, 110, id(particles_6)); break;
-        case 7: it.image(45, 110, id(particles_7)); break;
+      // Native particles — symmetric clusters aligned with "ppm CO2" baseline
+      Color particle_color(140, 140, 210);
+      constexpr int p_size = 4;
+      constexpr int p_baseline = 128;  // matches text baseline (top 112 + ~16 for roboto 20)
+      for (int i = 0; i < 4; i++) {
+        int phase = (frame + i * 2) % 8;
+        int bob = (phase < 4) ? phase - 2 : 5 - phase;  // triangle wave: -2..1
+        int py = p_baseline - p_size + bob;
+        it.filled_rectangle(46 + i * 8, py, p_size, p_size, particle_color);
+        it.filled_rectangle(190 - i * 8, py, p_size, p_size, particle_color);
       }
       
       it.print(120, 112, id(roboto_medium_20), Color(160, 160, 180), 
@@ -492,7 +434,7 @@ script:
   - id: buzzer_beep_short
     then:
       - output.turn_on: output_buzzer
-      - delay: 100ms
+      - delay: 50ms
       - output.turn_off: output_buzzer
 
 switch:

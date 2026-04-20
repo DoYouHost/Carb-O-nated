@@ -15,7 +15,7 @@ struct CO2Level {
   Color bg_dim;
 };
 
-CO2Level get_co2_level(float co2_value) {
+inline CO2Level get_co2_level(float co2_value) {
   CO2Level level;
   
   if (isnan(co2_value)) {
@@ -45,4 +45,17 @@ CO2Level get_co2_level(float co2_value) {
   }
   
   return level;
+}
+
+inline CO2Level get_co2_level_cached(float co2_value) {
+  static CO2Level cached_level = get_co2_level(NAN);
+  static float cached_co2 = NAN;
+
+  bool value_changed = (std::isnan(co2_value) != std::isnan(cached_co2)) ||
+                       (!std::isnan(co2_value) && std::abs(co2_value - cached_co2) > 0.01f);
+  if (value_changed) {
+    cached_level = get_co2_level(co2_value);
+    cached_co2 = co2_value;
+  }
+  return cached_level;
 }

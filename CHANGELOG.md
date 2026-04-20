@@ -1,5 +1,7 @@
 
 # 2026.4
+## .1
+- perf: render display with native primitives, drop image assets
 ## .0
 - feat: update to ESPHome 2026.4.1
 - feat: add display backlight toggle to Button A
