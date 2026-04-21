@@ -1,5 +1,7 @@
 
 # 2026.4
+## .2
+- fix: center segments on display
 ## .1
 - perf: render display with native primitives, drop image assets
 ## .0
