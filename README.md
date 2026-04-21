@@ -1,5 +1,10 @@
 # Carb-O-nated
 
+<table style="border-collapse:collapse;border:none;margin:0;padding:0"><tr>
+<td style="border:none;padding:0"><img src="assets/20260421_150438.jpg" alt="Initializing" width="400"/></td>
+<td style="border:none;padding:0"><img src="assets/20260421_150544.jpg" alt="Live CO₂ reading — 646 ppm Excellent" width="400"/></td>
+</tr></table>
+
 A smart indoor CO₂ monitor built on ESP32 with a color display, Home Assistant integration, and multi-language support.
 
 ## What it does
@@ -29,7 +34,7 @@ Colors update automatically based on CO₂ level:
 
 ## Sensors
 
-The device uses a **SCD4x** sensor to measure:
+The device uses a **SCD41** sensor to measure:
 
 - CO₂ concentration (ppm)
 - Temperature (°C)
