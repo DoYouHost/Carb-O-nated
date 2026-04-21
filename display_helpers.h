@@ -9,7 +9,7 @@ inline void draw_co2_bar(Display &it, float co2, Color fill_color, Color dim_col
   constexpr int seg_w = 11;
   constexpr int seg_h = 13;
   constexpr int seg_gap = 1;
-  constexpr int bar_x = 7;
+  constexpr int bar_x = 12;
   constexpr int bar_y = 97;
   constexpr int max_co2 = 3000;
 
