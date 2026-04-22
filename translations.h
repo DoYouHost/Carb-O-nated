@@ -32,6 +32,18 @@ const char* get_unit() {
   return get_text("ppm CO₂", "ppm CO₂", "ppm CO₂", "ppm CO₂", "ppm CO₂");
 }
 
+const char* get_label_co2() {
+  return get_text("CO₂", "CO₂", "CO₂", "CO₂", "CO₂");
+}
+
+const char* get_label_temperature() {
+  return get_text("TEMP", "TEMP", "TEMP", "TEMP", "TEMP");
+}
+
+const char* get_label_humidity() {
+  return get_text("HUM", "WILG", "FEUCHT", "HUM", "HUM");
+}
+
 const char* get_unknown() {
   return get_text("Unknown", "Nieznane", "Unbekannt", "Inconnu", "Desconocido");
 }

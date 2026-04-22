@@ -1,4 +1,12 @@
 
+# 2026.5
+## .0
+- feat: add info page with CO2/temp/humidity and page cycling
+  - display.pages: wrap existing view as `main_page`, add `info_page` with three rows and a slow top→bottom accent wave
+  - Button B and new "Next Page" HA template button cycle pages
+  - Gate page cycling on `init_done` flag (first valid CO2 reading) so UI stays on main_page during warm-up
+- fix: trigger firmware update check on SNTP sync to avoid TLS failure before clock is set; add 22:00 daily recheck
+- fix: add digits to roboto_bold_25 / roboto_medium_20 glyph sets
 # 2026.4
 ## .2
 - fix: center segments on display
