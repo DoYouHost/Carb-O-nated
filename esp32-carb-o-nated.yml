@@ -9,6 +9,19 @@ substitutions:
   AP_SSID: "Carb-O-nated"
   AP_PASSWORD: "esphome-fallback"
   DISPLAY_UPDATE_INTERVAL: "200"
+  # Pin assignments
+  PIN_I2C_SDA: GPIO21
+  PIN_I2C_SCL: GPIO22
+  PIN_SPI_CLK: GPIO18
+  PIN_SPI_MOSI: GPIO19
+  PIN_DISPLAY_BACKLIGHT: GPIO4
+  PIN_BUZZER: GPIO2
+  PIN_BUTTON_A: GPIO0
+  PIN_BUTTON_B: GPIO35
+  PIN_DISPLAY_DC: GPIO16
+  PIN_DISPLAY_CS: GPIO5
+  PIN_DISPLAY_RESET: GPIO23
+  PIN_STATUS_LED: GPIO17
 
 esphome:
   name: carb-o-nated
@@ -149,22 +162,22 @@ globals:
     initial_value: 'false'
 
 i2c:
-  sda: GPIO21
-  scl: GPIO22
+  sda: ${PIN_I2C_SDA}
+  scl: ${PIN_I2C_SCL}
   scan: false
   frequency: 400kHz
 
 spi:
-  clk_pin: GPIO18
-  mosi_pin: GPIO19
+  clk_pin: ${PIN_SPI_CLK}
+  mosi_pin: ${PIN_SPI_MOSI}
 
 output:
   - platform: ledc
-    pin: GPIO4
+    pin: ${PIN_DISPLAY_BACKLIGHT}
     id: output_display_backlight
 
   - platform: gpio
-    pin: GPIO2
+    pin: ${PIN_BUZZER}
     id: output_buzzer
 
 light:
@@ -179,7 +192,7 @@ binary_sensor:
     id: button_a
     name: "Button A"
     pin:
-      number: GPIO0
+      number: ${PIN_BUTTON_A}
       mode: INPUT_PULLUP
       inverted: true
     filters:
@@ -193,7 +206,7 @@ binary_sensor:
     id: button_b
     name: "Button B"
     pin:
-      number: GPIO35
+      number: ${PIN_BUTTON_B}
       inverted: true
     filters:
       - delayed_on_off: 20ms
@@ -355,9 +368,9 @@ display:
   - platform: mipi_spi
     id: main_display
     model: T-DISPLAY
-    dc_pin: GPIO16
-    cs_pin: GPIO5
-    reset_pin: GPIO23
+    dc_pin: ${PIN_DISPLAY_DC}
+    cs_pin: ${PIN_DISPLAY_CS}
+    reset_pin: ${PIN_DISPLAY_RESET}
     rotation: 270°
     data_rate: 80MHz
     update_interval: ${DISPLAY_UPDATE_INTERVAL}ms
@@ -565,7 +578,7 @@ button:
 
 status_led:
   pin:
-    number: GPIO17
+    number: ${PIN_STATUS_LED}
     inverted: false
 
 script:
@@ -581,11 +594,22 @@ script:
   
   - id: buzzer_beep_short
     then:
-      - output.turn_on: output_buzzer
-      - delay: 50ms
-      - output.turn_off: output_buzzer
+      - if:
+          condition:
+            switch.is_on: switch_buzzer_confirmation
+          then:
+            - output.turn_on: output_buzzer
+            - delay: 50ms
+            - output.turn_off: output_buzzer
 
 switch:
+  - platform: template
+    id: switch_buzzer_confirmation
+    name: "Buzzer Confirmation"
+    icon: "mdi:bullhorn"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+
   - platform: template
     id: switch_buzzer
     name: "Buzzer"

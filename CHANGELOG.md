@@ -1,5 +1,8 @@
 
 # 2026.5
+## .1
+- feat: add buzzer confirmation switch and move pin assignments to substitutions
+- feat: update to ESPHome 2026.4.3
 ## .0
 - feat: add info page with CO2/temp/humidity and page cycling
   - display.pages: wrap existing view as `main_page`, add `info_page` with three rows and a slow top→bottom accent wave
