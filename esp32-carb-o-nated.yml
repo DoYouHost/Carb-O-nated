@@ -100,6 +100,31 @@ time:
         hours: 22
         then:
           - component.update: update_http_request
+      - seconds: 0
+        then:
+          - lambda: |-
+              auto now = id(sntp_time).now();
+              if (!now.is_valid()) return;
+              bool is_on_time  = now.hour == id(light_on_time).hour
+                              && now.minute == id(light_on_time).minute;
+              bool is_off_time = now.hour == id(light_off_time).hour
+                              && now.minute == id(light_off_time).minute;
+              if (is_on_time) {
+                if (id(switch_led_strip_auto).state)
+                  id(switch_led_strip).turn_on();
+                if (id(switch_backlight_auto).state) {
+                  auto call = id(display_backlight).turn_on();
+                  call.perform();
+                }
+              }
+              if (is_off_time) {
+                if (id(switch_led_strip_auto).state)
+                  id(switch_led_strip).turn_off();
+                if (id(switch_backlight_auto).state) {
+                  auto call = id(display_backlight).turn_off();
+                  call.perform();
+                }
+              }
 
 captive_portal:
 
@@ -520,6 +545,25 @@ number:
         - lambda: |-
             id(humidity_offset) = x;
 
+datetime:
+  - platform: template
+    id: light_on_time
+    name: "Light On Time"
+    icon: "mdi:weather-sunset-up"
+    type: time
+    optimistic: true
+    restore_value: true
+    initial_value: "07:00:00"
+
+  - platform: template
+    id: light_off_time
+    name: "Light Off Time"
+    icon: "mdi:weather-sunset-down"
+    type: time
+    optimistic: true
+    restore_value: true
+    initial_value: "22:00:00"
+
 font:
   - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
     id: mdi_icon_50
@@ -528,10 +572,6 @@ font:
       - "\U000F0026"  # mdi:alert
 
   - file: "gfonts://Roboto@700"
-    id: roboto_bold_60
-    size: 60
-    glyphs: "0123456789"
-  - file: "gfonts://Roboto@700"
     id: roboto_bold_25
     size: 25
     glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéè"
@@ -539,6 +579,22 @@ font:
     id: roboto_medium_20
     size: 20
     glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉"
+  - file: "gfonts://Roboto@500"
+    id: roboto_medium_12
+    size: 12
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·°₀₁₂₃₄₅₆₇₈₉łéè"
+  - file: "gfonts://Roboto@700"
+    id: roboto_bold_48
+    size: 48
+    glyphs: "0123456789-"
+  - file: "gfonts://Roboto@700"
+    id: roboto_bold_16
+    size: 16
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéè"
+  - file: "gfonts://Roboto@500"
+    id: roboto_medium_14
+    size: 14
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·°₀₁₂₃₄₅₆₇₈₉łéè"
 
 display:
   - platform: mipi_spi
@@ -557,121 +613,169 @@ display:
         lambda: |-
           if (!id(display_backlight).current_values.is_on()) return;
           float co2 = id(scd4x_co2).state;
+          float co  = id(mq7_co).state;
 
-          if (isnan(co2)) {
+          if (!id(init_done)) {
             it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
             it.print(120, 28, id(mdi_icon_50), Color(255, 180, 0), TextAlign::TOP_CENTER, "\U000F0026");
             it.print(120, 95, id(roboto_medium_20), Color(180, 180, 255), TextAlign::TOP_CENTER, get_initializing());
             return;
           }
 
-          CO2Level level = get_co2_level_cached(co2);
-          Color sc = level.color;
-          const char* status_text = get_co2_level_text(level.type);
+          // === LEVELS ===
+          CO2Level co2_level = get_co2_level_cached(co2);
+          CO2Level co_level  = get_co_level_cached(co);
+          CO2LevelType overall = worst_aq_level(co2_level.type, co_level.type);
+          Color overall_color = get_level_color(overall);
+          const char* overall_text = get_co2_level_text(overall);
+
+          Color label_color(150, 150, 170);
+          Color divider_color(40, 40, 50);
+          Color footer_bg(8, 8, 9);
 
           // === BACKGROUND ===
           it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
 
-          // === TOP STATUS TEXT ===
-          it.print(120, 3, id(roboto_bold_25), sc, TextAlign::TOP_CENTER, status_text);
+          // ── LEFT ACCENT ──
+          it.filled_rectangle(0, 0, 6, 95, overall_color);
+          it.filled_rectangle(0, 95, 6, 40, co_level.bg_dim);
 
-          // === MAIN CO2 VALUE ===
-          it.printf(120, 22, id(roboto_bold_60), sc, TextAlign::TOP_CENTER, "%.0f", co2);
+          // ── HEADER (h=26) ──
+          it.filled_rectangle(8, 25, 226, 1, divider_color);
+          it.filled_circle(20, 13, 4, overall_color);
+          it.print(28, 13, id(roboto_bold_16), overall_color,
+            TextAlign::CENTER_LEFT, overall_text);
 
-          // === SEGMENTED BAR ===
-          draw_co2_bar(it, co2, sc, Color(40, 40, 45));
+          // ── CO₂ MAIN (y=26 to y=94) ──
+          if (isnan(co2)) {
+            it.print(120, 60, id(roboto_bold_48), label_color,
+              TextAlign::CENTER, "--");
+          } else {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", co2);
+            int digits = strlen(buf);
+            int val_half_w = (digits * 26) / 2;
+            it.printf(120, 60, id(roboto_bold_48), co2_level.color,
+              TextAlign::CENTER, "%s", buf);
+            it.print(120 - val_half_w - 5, 66, id(roboto_medium_14), label_color,
+              TextAlign::CENTER_RIGHT, get_label_co2());
+            it.print(120 + val_half_w + 5, 66, id(roboto_medium_14), label_color,
+              TextAlign::CENTER_LEFT, "ppm");
+          }
 
-          // === UNIT ===
-          it.print(120, 112, id(roboto_medium_20), Color(160, 160, 180),
-            TextAlign::TOP_CENTER, get_unit());
+          // ── CO FOOTER (y=95, h=40) ──
+          it.filled_rectangle(0, 94, 240, 1, divider_color);
+          it.filled_rectangle(0, 95, 240, 40, footer_bg);
 
-          // === CORNER BRACKETS ===
-          constexpr int corner_len = 8;
-          constexpr int corner_w = 1;
-          it.filled_rectangle(2, 2, corner_len, corner_w, sc);
-          it.filled_rectangle(2, 2, corner_w, corner_len, sc);
-          it.filled_rectangle(240 - corner_len - 2, 2, corner_len, corner_w, sc);
-          it.filled_rectangle(237, 2, corner_w, corner_len, sc);
-          it.filled_rectangle(2, 132, corner_len, corner_w, sc);
-          it.filled_rectangle(2, 124, corner_w, corner_len, sc);
-          it.filled_rectangle(240 - corner_len - 2, 132, corner_len, corner_w, sc);
-          it.filled_rectangle(237, 124, corner_w, corner_len, sc);
+          it.print(16, 115, id(roboto_bold_16), label_color,
+            TextAlign::CENTER_LEFT, "CO");
+
+          if (!isnan(co)) {
+            it.printf(196, 115, id(roboto_bold_25), co_level.color,
+              TextAlign::CENTER_RIGHT, "%.1f", co);
+            it.print(228, 115, id(roboto_medium_14), label_color,
+              TextAlign::CENTER_RIGHT, "ppm");
+          } else {
+            it.print(196, 115, id(roboto_bold_25), label_color,
+              TextAlign::CENTER_RIGHT, "--");
+          }
 
       - id: info_page
         lambda: |-
           if (!id(display_backlight).current_values.is_on()) return;
-          float co2 = id(scd4x_co2).state;
+          float co2  = id(scd4x_co2).state;
+          float co   = id(mq7_co).state;
           float temp = id(scd4x_temperature_copy).state;
-          float hum = id(scd4x_humidity_copy).state;
+          float hum  = id(scd4x_humidity_copy).state;
 
-          // === BACKGROUND ===
-          it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
-
-          // === ACCENT COLORS ===
-          CO2Level level = get_co2_level_cached(co2);
-          Color co2_color = level.color;
+          // === COLORS ===
+          CO2Level co2_level = get_co2_level_cached(co2);
+          CO2Level co_level  = get_co_level_cached(co);
+          Color co2_color = co2_level.color;
+          Color co_color  = co_level.color;
           Color temp_color(255, 140, 60);
           Color hum_color(80, 190, 255);
           Color label_color(150, 150, 170);
           Color divider_color(40, 40, 50);
 
-          constexpr int row_h = 45;
-          constexpr int row1_y = 0;
-          constexpr int row2_y = 45;
-          constexpr int row3_y = 90;
+          // === BACKGROUND ===
+          it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
 
-          // === LEFT ACCENT STRIPS (static) ===
-          it.filled_rectangle(0, row1_y, 4, row_h, co2_color);
-          it.filled_rectangle(0, row2_y, 4, row_h, temp_color);
-          it.filled_rectangle(0, row3_y, 4, row_h, hum_color);
+          // === LAYOUT: 2x2 grid ===
+          constexpr int mid_y = 67;
+          constexpr int mid_x = 120;
 
-          // === ROW DIVIDERS ===
-          it.filled_rectangle(8, row2_y - 1, 226, 1, divider_color);
-          it.filled_rectangle(8, row3_y - 1, 226, 1, divider_color);
+          // ── DIVIDERS ──
+          it.filled_rectangle(0, mid_y, 240, 1, divider_color);
+          it.filled_rectangle(mid_x, 14, 1, 40, divider_color);
+          it.filled_rectangle(mid_x, 82, 1, 40, divider_color);
 
-          constexpr int unit_x = 232;
-          constexpr int value_x = 188;
-          constexpr int label_dy = 13;
-          constexpr int value_dy = 10;
-          constexpr int unit_dy = 16;
-
-          // === ROW 1: CO2 ===
-          it.print(12, row1_y + label_dy, id(roboto_medium_20), label_color,
+          // ── TOP-LEFT: CO₂ ──
+          it.filled_rectangle(18, 18, 4, 32, co2_color);
+          it.print(28, 24, id(roboto_medium_14), label_color,
             TextAlign::TOP_LEFT, get_label_co2());
           if (isnan(co2)) {
-            it.print(unit_x, row1_y + value_dy, id(roboto_bold_25), label_color,
-              TextAlign::TOP_RIGHT, "--");
+            it.print(28, 38, id(roboto_bold_25), label_color,
+              TextAlign::TOP_LEFT, "--");
           } else {
-            it.printf(value_x, row1_y + value_dy, id(roboto_bold_25), co2_color,
-              TextAlign::TOP_RIGHT, "%.0f", co2);
-            it.print(unit_x, row1_y + unit_dy, id(roboto_medium_20), label_color,
-              TextAlign::TOP_RIGHT, "ppm");
+            it.printf(28, 38, id(roboto_bold_25), co2_color,
+              TextAlign::TOP_LEFT, "%.0f", co2);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", co2);
+            int vw = strlen(buf) * 15;
+            it.print(28 + vw + 3, 44, id(roboto_medium_12), label_color,
+              TextAlign::TOP_LEFT, "ppm");
           }
 
-          // === ROW 2: Temperature ===
-          it.print(12, row2_y + label_dy, id(roboto_medium_20), label_color,
+          // ── TOP-RIGHT: CO ──
+          it.filled_rectangle(138, 18, 4, 32, co_color);
+          it.print(148, 24, id(roboto_medium_14), label_color,
+            TextAlign::TOP_LEFT, "CO");
+          if (isnan(co)) {
+            it.print(148, 38, id(roboto_bold_25), label_color,
+              TextAlign::TOP_LEFT, "--");
+          } else {
+            it.printf(148, 38, id(roboto_bold_25), co_color,
+              TextAlign::TOP_LEFT, "%.1f", co);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.1f", co);
+            int vw = strlen(buf) * 15;
+            it.print(148 + vw + 3, 44, id(roboto_medium_12), label_color,
+              TextAlign::TOP_LEFT, "ppm");
+          }
+
+          // ── BOTTOM-LEFT: Temperature ──
+          it.filled_rectangle(18, 85, 4, 32, temp_color);
+          it.print(28, 91, id(roboto_medium_14), label_color,
             TextAlign::TOP_LEFT, get_label_temperature());
           if (isnan(temp)) {
-            it.print(unit_x, row2_y + value_dy, id(roboto_bold_25), label_color,
-              TextAlign::TOP_RIGHT, "--");
+            it.print(28, 105, id(roboto_bold_25), label_color,
+              TextAlign::TOP_LEFT, "--");
           } else {
-            it.printf(value_x, row2_y + value_dy, id(roboto_bold_25), temp_color,
-              TextAlign::TOP_RIGHT, "%.1f", temp);
-            it.print(unit_x, row2_y + unit_dy, id(roboto_medium_20), label_color,
-              TextAlign::TOP_RIGHT, "°C");
+            it.printf(28, 105, id(roboto_bold_25), temp_color,
+              TextAlign::TOP_LEFT, "%.1f", temp);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.1f", temp);
+            int vw = strlen(buf) * 15;
+            it.print(28 + vw + 3, 111, id(roboto_medium_12), label_color,
+              TextAlign::TOP_LEFT, "\xC2\xB0""C");
           }
 
-          // === ROW 3: Humidity ===
-          it.print(12, row3_y + label_dy, id(roboto_medium_20), label_color,
+          // ── BOTTOM-RIGHT: Humidity ──
+          it.filled_rectangle(138, 85, 4, 32, hum_color);
+          it.print(148, 91, id(roboto_medium_14), label_color,
             TextAlign::TOP_LEFT, get_label_humidity());
           if (isnan(hum)) {
-            it.print(unit_x, row3_y + value_dy, id(roboto_bold_25), label_color,
-              TextAlign::TOP_RIGHT, "--");
+            it.print(148, 105, id(roboto_bold_25), label_color,
+              TextAlign::TOP_LEFT, "--");
           } else {
-            it.printf(value_x, row3_y + value_dy, id(roboto_bold_25), hum_color,
-              TextAlign::TOP_RIGHT, "%.1f", hum);
-            it.print(unit_x, row3_y + unit_dy, id(roboto_medium_20), label_color,
-              TextAlign::TOP_RIGHT, "%");
+            it.printf(148, 105, id(roboto_bold_25), hum_color,
+              TextAlign::TOP_LEFT, "%.0f", hum);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.0f", hum);
+            int vw = strlen(buf) * 15;
+            it.print(148 + vw + 3, 111, id(roboto_medium_12), label_color,
+              TextAlign::TOP_LEFT, "%");
           }
 
 button:
@@ -771,6 +875,20 @@ switch:
     icon: "mdi:bullhorn"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
+
+  - platform: template
+    id: switch_led_strip_auto
+    name: "LED Strip Auto"
+    icon: "mdi:led-strip-variant"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: template
+    id: switch_backlight_auto
+    name: "Display Backlight Auto"
+    icon: "mdi:brightness-auto"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: template
     id: switch_buzzer
