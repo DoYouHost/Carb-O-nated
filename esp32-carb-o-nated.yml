@@ -1,4 +1,5 @@
 ---
+# Board: https://www.espboards.dev/esp32/lilygo-ttgo-t-display-1-14/
 substitutions:
   API_KEY: "HrnLJeueTkAq4x1BBxR2ugB460w9H+Q50uNPBLgnYK0="
   OTA_PASSWORD: "ean1dkAGQi7sz9J3kGM@JG0v2Yohe930"
@@ -22,6 +23,14 @@ substitutions:
   PIN_DISPLAY_CS: GPIO5
   PIN_DISPLAY_RESET: GPIO23
   PIN_STATUS_LED: GPIO17
+  # WS2812B LED strip
+  WS2812B_PIN: GPIO26
+  WS2812B_COUNT: "3"
+  # MQ-7 CO sensor
+  MQ7_HEATER_PIN: GPIO25
+  MQ7_ANALOG_PIN: GPIO36
+  MQ7_LOW_SIDE_RESISTOR: "1000"
+  MQ7_HIGH_SIDE_RESISTOR: "470"
 
 esphome:
   name: carb-o-nated
@@ -180,6 +189,10 @@ output:
     pin: ${PIN_BUZZER}
     id: output_buzzer
 
+  - platform: gpio
+    pin: ${MQ7_HEATER_PIN}
+    id: mq7_heater_pin
+
 light:
   - platform: monochromatic
     id: display_backlight
@@ -187,7 +200,23 @@ light:
     output: output_display_backlight
     restore_mode: RESTORE_DEFAULT_ON
 
+  - platform: esp32_rmt_led_strip
+    rgb_order: GRB
+    pin: "${WS2812B_PIN}"
+    num_leds: "${WS2812B_COUNT}"
+    chipset: WS2812
+    id: led_strip
+    name: "LED Strip"
+    icon: mdi:led-strip
+    max_refresh_rate: 16ms
+
 binary_sensor:
+  - platform: template
+    name: "MQ7 Heater"
+    icon: mdi:fire
+    entity_category: diagnostic
+    lambda: return id(mq7_heater).state;
+
   - platform: gpio
     id: button_a
     name: "Button A"
@@ -280,6 +309,76 @@ sensor:
       - lambda: |-
           return x + id(humidity_offset);
 
+  - platform: adc
+    id: mq7_raw
+    name: "MQ7 Voltage"
+    entity_category: diagnostic
+    disabled_by_default: true
+    pin: ${MQ7_ANALOG_PIN}
+    attenuation: auto
+    update_interval: never
+    filters:
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 5
+
+  - platform: resistance
+    id: mq7_resistance
+    name: "MQ7 Resistance"
+    icon: mdi:omega
+    entity_category: diagnostic
+    disabled_by_default: true
+    sensor: mq7_raw
+    configuration: UPSTREAM
+    resistor: ${MQ7_LOW_SIDE_RESISTOR}
+    reference_voltage: 5.0V
+    filters:
+      - lambda: return (x - ${MQ7_HIGH_SIDE_RESISTOR});
+    on_value:
+      then:
+        - component.update: mq7_compensated_resistance
+
+  - platform: template
+    id: mq7_compensated_resistance
+    name: "MQ7 Compensated Resistance"
+    icon: mdi:omega
+    entity_category: diagnostic
+    unit_of_measurement: Ω
+    lambda: |-
+      return (id(mq7_resistance).state / ( -0.01223333 * id(scd4x_temperature).state -0.00609615 * id(scd4x_humidity).state + 1.70860897));
+    update_interval: never
+    on_value:
+      then:
+        - component.update: mq7_ratio
+
+  - platform: template
+    id: mq7_ratio
+    name: "MQ7 Ratio"
+    icon: mdi:percent
+    entity_category: diagnostic
+    disabled_by_default: true
+    unit_of_measurement: "%"
+    lambda: |-
+      return 100.0 * (id(mq7_compensated_resistance).state / id(mq7_clean_air_compensated_resistance).state);
+    update_interval: never
+    on_value:
+      then:
+        - component.update: mq7_co
+
+  - platform: template
+    id: mq7_co
+    name: "MQ7 Carbon Monoxide"
+    unit_of_measurement: "ppm"
+    device_class: carbon_monoxide
+    lambda: |-
+      float ratio = id(mq7_ratio).state;
+      if (isnan(ratio) || ratio <= 0.0f) return NAN;
+      auto ratio_ln = log(ratio / 100.0);
+      float result = exp(-0.685204 - 2.67936 * ratio_ln - 0.488075 * ratio_ln * ratio_ln - 0.07818 * ratio_ln * ratio_ln * ratio_ln);
+      if (isnan(result) || result < 0.0f) return NAN;
+      return result;
+    update_interval: never
+
 text_sensor:
   - platform: template
     name: "CO2 Air Quality Level"
@@ -316,6 +415,19 @@ select:
             else if (x == "Español") current_language = LANG_ES;
 
 number:
+  - platform: template
+    name: "MQ7 Clean Air Resistance"
+    id: mq7_clean_air_compensated_resistance
+    icon: mdi:omega
+    entity_category: config
+    unit_of_measurement: Ω
+    min_value: 1000
+    max_value: 500000
+    step: 100
+    initial_value: 55000
+    optimistic: true
+    restore_value: true
+
   - platform: template
     name: "Temperature Offset"
     id: temperature_offset_number
@@ -581,6 +693,19 @@ status_led:
     number: ${PIN_STATUS_LED}
     inverted: false
 
+interval:
+  - interval: 150s
+    then:
+      - switch.turn_on: mq7_heater
+      - delay: 55s
+      - switch.turn_off: mq7_heater
+      - delay: 90s
+      - repeat:
+          count: 5
+          then:
+            - component.update: mq7_raw
+            - delay: 20ms
+
 script:
   - id: startup_buzzer
     then:
@@ -603,6 +728,11 @@ script:
             - output.turn_off: output_buzzer
 
 switch:
+  - platform: output
+    id: mq7_heater
+    internal: true
+    output: mq7_heater_pin
+
   - platform: template
     id: switch_buzzer_confirmation
     name: "Buzzer Confirmation"
