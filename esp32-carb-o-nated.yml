@@ -9,7 +9,7 @@ substitutions:
   WEB_PASSWORD: "esphome"
   AP_SSID: "Carb-O-nated"
   AP_PASSWORD: "esphome-fallback"
-  DISPLAY_UPDATE_INTERVAL: "200"
+  DISPLAY_UPDATE_INTERVAL: "1000"
   # Pin assignments
   PIN_I2C_SDA: GPIO21
   PIN_I2C_SCL: GPIO22
@@ -41,13 +41,14 @@ esphome:
     name: "DoYouHost.Carb-O-nated"
     version: "dev"
   includes:
-    - co2_levels.h
+    - air_quality_levels.h
     - translations.h
     - display_helpers.h
   on_boot:
     priority: 300
     then:
       - script.execute: startup_buzzer
+      - component.update: main_display
 
 esp32:
   board: esp32dev
@@ -199,6 +200,8 @@ light:
     name: "Display Backlight"
     output: output_display_backlight
     restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - component.update: main_display
 
   - platform: esp32_rmt_led_strip
     rgb_order: GRB
@@ -206,9 +209,28 @@ light:
     num_leds: "${WS2812B_COUNT}"
     chipset: WS2812
     id: led_strip
-    name: "LED Strip"
-    icon: mdi:led-strip
+    internal: true
     max_refresh_rate: 16ms
+    effects:
+      - addressable_lambda:
+          name: "Wave"
+          update_interval: 16ms
+          lambda: |-
+            float t = fmodf(millis() / 1000.0f, 628.318f);
+            float max_b = id(led_strip_max_brightness).state / 100.0f;
+            CO2LevelType worst = worst_aq_level(
+              get_co2_level_cached(id(scd4x_co2).state).type,
+              get_co_level_cached(id(mq7_co).state).type
+            );
+            Color aq = get_level_color(worst);
+            for (int i = 0; i < it.size(); i++) {
+              float b = (sinf(t * 2.0f + i * 2.094395f) * 0.35f + 0.65f) * max_b;
+              it[i] = Color(
+                (uint8_t)(aq.r * b),
+                (uint8_t)(aq.g * b),
+                (uint8_t)(aq.b * b)
+              );
+            }
 
 binary_sensor:
   - platform: template
@@ -272,8 +294,8 @@ sensor:
               if (!id(init_done) && !isnan(x) && x > 0.0f) {
                 id(init_done) = true;
                 id(main_display).show_page(id(main_page));
-                id(main_display).update();
               }
+          - component.update: main_display
     temperature:
       id: scd4x_temperature
       internal: true
@@ -367,7 +389,7 @@ sensor:
 
   - platform: template
     id: mq7_co
-    name: "MQ7 Carbon Monoxide"
+    name: "CO Concentration"
     unit_of_measurement: "ppm"
     device_class: carbon_monoxide
     lambda: |-
@@ -378,17 +400,39 @@ sensor:
       if (isnan(result) || result < 0.0f) return NAN;
       return result;
     update_interval: never
+    on_value:
+      - component.update: main_display
 
 text_sensor:
   - platform: template
     name: "CO2 Air Quality Level"
     id: co2_level_text
+    icon: "mdi:molecule-co2"
+    update_interval: 60s
+    lambda: |-
+      CO2Level level = get_co2_level_cached(id(scd4x_co2).state);
+      return {get_co2_level_text_en(level.type)};
+
+  - platform: template
+    name: "CO Air Quality Level"
+    id: co_level_text
+    icon: "mdi:molecule-co"
+    update_interval: 60s
+    lambda: |-
+      CO2Level level = get_co_level_cached(id(mq7_co).state);
+      return {get_co2_level_text_en(level.type)};
+
+  - platform: template
+    name: "Air Quality Level"
+    id: air_quality_level_text
     icon: "mdi:air-filter"
     update_interval: 60s
     lambda: |-
-      float co2 = id(scd4x_co2).state;
-      CO2Level level = get_co2_level(co2);
-      return {get_co2_level_text(level.type)};
+      CO2LevelType worst = worst_aq_level(
+        get_co2_level_cached(id(scd4x_co2).state).type,
+        get_co_level_cached(id(mq7_co).state).type
+      );
+      return {get_co2_level_text_en(worst)};
 
 select:
   - platform: template
@@ -413,6 +457,7 @@ select:
             else if (x == "Deutsch") current_language = LANG_DE;
             else if (x == "Français") current_language = LANG_FR;
             else if (x == "Español") current_language = LANG_ES;
+        - component.update: main_display
 
 number:
   - platform: template
@@ -446,6 +491,19 @@ number:
             id(temperature_offset) = x;
 
   - platform: template
+    name: "LED Strip Max Brightness"
+    id: led_strip_max_brightness
+    icon: "mdi:brightness-percent"
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 100
+    mode: slider
+    optimistic: true
+    restore_value: true
+
+  - platform: template
     name: "Humidity Offset"
     id: humidity_offset_number
     icon: "mdi:water-percent"
@@ -463,6 +521,12 @@ number:
             id(humidity_offset) = x;
 
 font:
+  - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
+    id: mdi_icon_50
+    size: 50
+    glyphs:
+      - "\U000F0026"  # mdi:alert
+
   - file: "gfonts://Roboto@700"
     id: roboto_bold_60
     size: 60
@@ -485,30 +549,25 @@ display:
     reset_pin: ${PIN_DISPLAY_RESET}
     rotation: 270°
     data_rate: 80MHz
-    update_interval: ${DISPLAY_UPDATE_INTERVAL}ms
+    update_interval: never
+    on_page_change:
+      - component.update: main_display
     pages:
       - id: main_page
         lambda: |-
+          if (!id(display_backlight).current_values.is_on()) return;
           float co2 = id(scd4x_co2).state;
 
           if (isnan(co2)) {
             it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
-            constexpr float DEG2RAD = 0.01745329f;
-            float base_deg = millis() * 0.025f;  // ~14.4s per full rotation (~5°/frame)
-            for (int i = 0; i < 8; i++) {
-              float rad = (base_deg + i * 45.0f) * DEG2RAD;
-              int x = 120 + (int)(25.0f * cosf(rad));
-              int y = 67 + (int)(25.0f * sinf(rad));
-              it.filled_circle(x, y, 4, Color(100 + i*20, 100 + i*20, 255));
-            }
-            it.print(120, 100, id(roboto_medium_20), Color(180, 180, 255), TextAlign::TOP_CENTER, get_initializing());
+            it.print(120, 28, id(mdi_icon_50), Color(255, 180, 0), TextAlign::TOP_CENTER, "\U000F0026");
+            it.print(120, 95, id(roboto_medium_20), Color(180, 180, 255), TextAlign::TOP_CENTER, get_initializing());
             return;
           }
 
           CO2Level level = get_co2_level_cached(co2);
           Color sc = level.color;
           const char* status_text = get_co2_level_text(level.type);
-          static uint8_t frame = 0;
 
           // === BACKGROUND ===
           it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
@@ -517,105 +576,67 @@ display:
           it.print(120, 3, id(roboto_bold_25), sc, TextAlign::TOP_CENTER, status_text);
 
           // === MAIN CO2 VALUE ===
-          int depth = frame % 2;
-          it.printf(120 - depth, 22, id(roboto_bold_60), sc,
-            TextAlign::TOP_CENTER, "%.0f", co2);
+          it.printf(120, 22, id(roboto_bold_60), sc, TextAlign::TOP_CENTER, "%.0f", co2);
 
           // === SEGMENTED BAR ===
           draw_co2_bar(it, co2, sc, Color(40, 40, 45));
 
-
-          // === BOTTOM INFO BAR (y: 114-132, safe zone) ===
-          // Native particles — symmetric clusters aligned with "ppm CO2" baseline
-          Color particle_color(140, 140, 210);
-          constexpr int p_size = 4;
-          constexpr int p_baseline = 128;  // matches text baseline (top 112 + ~16 for roboto 20)
-          for (int i = 0; i < 4; i++) {
-            int phase = (frame + i * 2) % 8;
-            int bob = (phase < 4) ? phase - 2 : 5 - phase;  // triangle wave: -2..1
-            int py = p_baseline - p_size + bob;
-            it.filled_rectangle(46 + i * 8, py, p_size, p_size, particle_color);
-            it.filled_rectangle(190 - i * 8, py, p_size, p_size, particle_color);
-          }
-
+          // === UNIT ===
           it.print(120, 112, id(roboto_medium_20), Color(160, 160, 180),
             TextAlign::TOP_CENTER, get_unit());
 
-          // === CORNER BRACKETS (static, clean) ===
-          int corner_len = 8;
-          int corner_w = 1;
-          // Top-left
+          // === CORNER BRACKETS ===
+          constexpr int corner_len = 8;
+          constexpr int corner_w = 1;
           it.filled_rectangle(2, 2, corner_len, corner_w, sc);
           it.filled_rectangle(2, 2, corner_w, corner_len, sc);
-          // Top-right
           it.filled_rectangle(240 - corner_len - 2, 2, corner_len, corner_w, sc);
           it.filled_rectangle(237, 2, corner_w, corner_len, sc);
-          // Bottom-left
           it.filled_rectangle(2, 132, corner_len, corner_w, sc);
           it.filled_rectangle(2, 124, corner_w, corner_len, sc);
-          // Bottom-right
           it.filled_rectangle(240 - corner_len - 2, 132, corner_len, corner_w, sc);
           it.filled_rectangle(237, 124, corner_w, corner_len, sc);
 
-          frame++;
-          if(frame >= 8) frame = 0;
-
       - id: info_page
         lambda: |-
+          if (!id(display_backlight).current_values.is_on()) return;
           float co2 = id(scd4x_co2).state;
           float temp = id(scd4x_temperature_copy).state;
           float hum = id(scd4x_humidity_copy).state;
-          static uint16_t frame2 = 0;
-          constexpr uint16_t wave_period = 40;  // 40 * 200ms = 8s full wave
 
-          // === BACKGROUND (neutral, per design) ===
+          // === BACKGROUND ===
           it.filled_rectangle(0, 0, 240, 135, Color(12, 12, 14));
 
           // === ACCENT COLORS ===
           CO2Level level = get_co2_level_cached(co2);
           Color co2_color = level.color;
-          Color temp_color(255, 140, 60);     // warm amber
-          Color hum_color(80, 190, 255);      // cool cyan
+          Color temp_color(255, 140, 60);
+          Color hum_color(80, 190, 255);
           Color label_color(150, 150, 170);
           Color divider_color(40, 40, 50);
 
-          // Three equal rows spanning the full 135px height.
           constexpr int row_h = 45;
           constexpr int row1_y = 0;
           constexpr int row2_y = 45;
           constexpr int row3_y = 90;
 
-          // === LEFT ACCENT STRIP (slow wave top→bottom) ===
-          // Each row's width is a triangle wave of (frame2 - phase_offset),
-          // so the bulge travels downward through the three strips.
-          auto strip_w_for = [](uint16_t f, uint16_t phase) -> int {
-            uint16_t t = (f + wave_period - phase) % wave_period;
-            // triangle: 0..half..0, scaled to 0..12 (amplitude)
-            uint16_t half = wave_period / 2;
-            int tri = (t < half) ? (int)t : (int)(wave_period - t);
-            return 3 + (tri * 12) / (int)half;  // 3..15
-          };
-          constexpr uint16_t phase_row1 = 0;
-          constexpr uint16_t phase_row2 = wave_period / 3;       // ~2.67s behind row1
-          constexpr uint16_t phase_row3 = (wave_period * 2) / 3; // ~5.33s behind row1
-          it.filled_rectangle(0, row1_y, strip_w_for(frame2, phase_row1), row_h, co2_color);
-          it.filled_rectangle(0, row2_y, strip_w_for(frame2, phase_row2), row_h, temp_color);
-          it.filled_rectangle(0, row3_y, strip_w_for(frame2, phase_row3), row_h, hum_color);
+          // === LEFT ACCENT STRIPS (static) ===
+          it.filled_rectangle(0, row1_y, 4, row_h, co2_color);
+          it.filled_rectangle(0, row2_y, 4, row_h, temp_color);
+          it.filled_rectangle(0, row3_y, 4, row_h, hum_color);
 
           // === ROW DIVIDERS ===
-          it.filled_rectangle(20, row2_y - 1, 214, 1, divider_color);
-          it.filled_rectangle(20, row3_y - 1, 214, 1, divider_color);
+          it.filled_rectangle(8, row2_y - 1, 226, 1, divider_color);
+          it.filled_rectangle(8, row3_y - 1, 226, 1, divider_color);
 
-          // Layout per row: [LABEL]  ...........  [VALUE] [UNIT]
-          // Value and unit share a baseline — no vertical stacking.
-          constexpr int unit_x = 232;   // right edge of unit
-          constexpr int value_x = 188;  // right edge of value (leaves ~44px for unit)
-          constexpr int label_dy = 13;  // label top offset within row (for 20px font, centered in 45px)
-          constexpr int value_dy = 10;  // value top offset within row (for 25px font, centered in 45px)
-          constexpr int unit_dy = 16;   // unit top offset within row (for 20px font, baseline-aligned to value)
+          constexpr int unit_x = 232;
+          constexpr int value_x = 188;
+          constexpr int label_dy = 13;
+          constexpr int value_dy = 10;
+          constexpr int unit_dy = 16;
 
           // === ROW 1: CO2 ===
-          it.print(24, row1_y + label_dy, id(roboto_medium_20), label_color,
+          it.print(12, row1_y + label_dy, id(roboto_medium_20), label_color,
             TextAlign::TOP_LEFT, get_label_co2());
           if (isnan(co2)) {
             it.print(unit_x, row1_y + value_dy, id(roboto_bold_25), label_color,
@@ -628,7 +649,7 @@ display:
           }
 
           // === ROW 2: Temperature ===
-          it.print(24, row2_y + label_dy, id(roboto_medium_20), label_color,
+          it.print(12, row2_y + label_dy, id(roboto_medium_20), label_color,
             TextAlign::TOP_LEFT, get_label_temperature());
           if (isnan(temp)) {
             it.print(unit_x, row2_y + value_dy, id(roboto_bold_25), label_color,
@@ -641,7 +662,7 @@ display:
           }
 
           // === ROW 3: Humidity ===
-          it.print(24, row3_y + label_dy, id(roboto_medium_20), label_color,
+          it.print(12, row3_y + label_dy, id(roboto_medium_20), label_color,
             TextAlign::TOP_LEFT, get_label_humidity());
           if (isnan(hum)) {
             it.print(unit_x, row3_y + value_dy, id(roboto_bold_25), label_color,
@@ -652,9 +673,6 @@ display:
             it.print(unit_x, row3_y + unit_dy, id(roboto_medium_20), label_color,
               TextAlign::TOP_RIGHT, "%");
           }
-
-          frame2++;
-          if (frame2 >= wave_period) frame2 = 0;
 
 button:
   - platform: template
@@ -728,6 +746,20 @@ script:
             - output.turn_off: output_buzzer
 
 switch:
+  - platform: template
+    name: "LED Strip"
+    id: switch_led_strip
+    icon: "mdi:led-strip"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: |-
+          auto call = id(led_strip).turn_on();
+          call.set_effect("Wave");
+          call.perform();
+    turn_off_action:
+      - light.turn_off: led_strip
+
   - platform: output
     id: mq7_heater
     internal: true

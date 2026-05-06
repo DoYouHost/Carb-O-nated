@@ -48,7 +48,7 @@ const char* get_unknown() {
   return get_text("Unknown", "Nieznane", "Unbekannt", "Inconnu", "Desconocido");
 }
 
-// CO2 Level translations
+// CO2 Level translations — for display (localized)
 const char* get_co2_level_text(CO2LevelType level_type) {
   switch(level_type) {
     case CO2_PERFECT:
@@ -64,6 +64,19 @@ const char* get_co2_level_text(CO2LevelType level_type) {
     case CO2_UNKNOWN:
     default:
       return get_text("Unknown", "Nieznane", "Unbekannt", "Inconnu", "Desconocido");
+  }
+}
+
+// English-only version for Home Assistant text sensors (not localized)
+const char* get_co2_level_text_en(CO2LevelType level_type) {
+  switch(level_type) {
+    case CO2_PERFECT:   return "Perfect";
+    case CO2_EXCELLENT: return "Excellent";
+    case CO2_MODERATE:  return "Moderate";
+    case CO2_POOR:      return "Poor";
+    case CO2_VERY_POOR: return "Very Poor";
+    case CO2_UNKNOWN:
+    default:            return "Unknown";
   }
 }
 
