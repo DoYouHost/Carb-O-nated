@@ -1,5 +1,13 @@
 
 # 2026.5
+## .2
+- feat: redesign main_page — left accent strip, centered CO₂ value, segmented bar, CO footer
+- feat: redesign info_page — 2×2 grid with per-sensor accent bars and fill backgrounds
+- feat: add Light On/Off Time inputs and LED Strip / Backlight Auto switches with scheduled control
+- feat: add MQ-7 CO sensor with temperature/humidity compensation
+- feat: add WS2812B wave effect colored by air quality level
+- feat: add init screen during sensor warm-up
+- feat: event-driven display updates
 ## .1
 - feat: add buzzer confirmation switch and move pin assignments to substitutions
 - feat: update to ESPHome 2026.4.3
