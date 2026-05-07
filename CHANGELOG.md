@@ -1,5 +1,7 @@
 
 # 2026.5
+## .3
+- feat: move to Carb-O-nated-Common repo for shared assets and code
 ## .2
 - feat: redesign main_page — left accent strip, centered CO₂ value, segmented bar, CO footer
 - feat: redesign info_page — 2×2 grid with per-sensor accent bars and fill backgrounds

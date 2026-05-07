@@ -67,7 +67,7 @@ dashboard_import:
 packages:
   DoYouHost/ESPHomeTemplates:
     url: https://github.com/DoYouHost/ESPHomeTemplates
-    files: 
+    files:
       - basic.yaml
       - debug.yaml
       - updateBetaProdStaging.yaml
@@ -243,10 +243,10 @@ light:
           lambda: |-
             float t = fmodf(millis() / 1000.0f, 628.318f);
             float max_b = id(led_strip_max_brightness).state / 100.0f;
-            CO2LevelType worst = worst_aq_level(
+            AirQualityLevelType worst = worst_level({
               get_co2_level_cached(id(scd4x_co2).state).type,
               get_co_level_cached(id(mq7_co).state).type
-            );
+            });
             Color aq = get_level_color(worst);
             for (int i = 0; i < it.size(); i++) {
               float b = (sinf(t * 2.0f + i * 2.094395f) * 0.35f + 0.65f) * max_b;
@@ -435,8 +435,8 @@ text_sensor:
     icon: "mdi:molecule-co2"
     update_interval: 60s
     lambda: |-
-      CO2Level level = get_co2_level_cached(id(scd4x_co2).state);
-      return {get_co2_level_text_en(level.type)};
+      AirQualityLevel level = get_co2_level_cached(id(scd4x_co2).state);
+      return {get_aq_label_en(level.type)};
 
   - platform: template
     name: "CO Air Quality Level"
@@ -444,8 +444,8 @@ text_sensor:
     icon: "mdi:molecule-co"
     update_interval: 60s
     lambda: |-
-      CO2Level level = get_co_level_cached(id(mq7_co).state);
-      return {get_co2_level_text_en(level.type)};
+      AirQualityLevel level = get_co_level_cached(id(mq7_co).state);
+      return {get_aq_label_en(level.type)};
 
   - platform: template
     name: "Air Quality Level"
@@ -453,11 +453,11 @@ text_sensor:
     icon: "mdi:air-filter"
     update_interval: 60s
     lambda: |-
-      CO2LevelType worst = worst_aq_level(
+      AirQualityLevelType worst = worst_level({
         get_co2_level_cached(id(scd4x_co2).state).type,
         get_co_level_cached(id(mq7_co).state).type
-      );
-      return {get_co2_level_text_en(worst)};
+      });
+      return {get_aq_label_en(worst)};
 
 select:
   - platform: template
@@ -623,11 +623,11 @@ display:
           }
 
           // === LEVELS ===
-          CO2Level co2_level = get_co2_level_cached(co2);
-          CO2Level co_level  = get_co_level_cached(co);
-          CO2LevelType overall = worst_aq_level(co2_level.type, co_level.type);
+          AirQualityLevel co2_level = get_co2_level_cached(co2);
+          AirQualityLevel co_level  = get_co_level_cached(co);
+          AirQualityLevelType overall = worst_level({co2_level.type, co_level.type});
           Color overall_color = get_level_color(overall);
-          const char* overall_text = get_co2_level_text(overall);
+          const char* overall_text = get_aq_label(overall);
 
           Color label_color(150, 150, 170);
           Color divider_color(40, 40, 50);
@@ -638,7 +638,7 @@ display:
 
           // ── LEFT ACCENT ──
           it.filled_rectangle(0, 0, 6, 95, overall_color);
-          it.filled_rectangle(0, 95, 6, 40, co_level.bg_dim);
+          it.filled_rectangle(0, 95, 6, 40, get_level_bg_dim(co_level.type));
 
           // ── HEADER (h=26) ──
           it.filled_rectangle(8, 25, 226, 1, divider_color);
@@ -655,7 +655,7 @@ display:
             snprintf(buf, sizeof(buf), "%.0f", co2);
             int digits = strlen(buf);
             int val_half_w = (digits * 26) / 2;
-            it.printf(120, 60, id(roboto_bold_48), co2_level.color,
+            it.printf(120, 60, id(roboto_bold_48), get_level_color(co2_level.type),
               TextAlign::CENTER, "%s", buf);
             it.print(120 - val_half_w - 5, 66, id(roboto_medium_14), label_color,
               TextAlign::CENTER_RIGHT, get_label_co2());
@@ -671,7 +671,7 @@ display:
             TextAlign::CENTER_LEFT, "CO");
 
           if (!isnan(co)) {
-            it.printf(196, 115, id(roboto_bold_25), co_level.color,
+            it.printf(196, 115, id(roboto_bold_25), get_level_color(co_level.type),
               TextAlign::CENTER_RIGHT, "%.1f", co);
             it.print(228, 115, id(roboto_medium_14), label_color,
               TextAlign::CENTER_RIGHT, "ppm");
@@ -689,10 +689,10 @@ display:
           float hum  = id(scd4x_humidity_copy).state;
 
           // === COLORS ===
-          CO2Level co2_level = get_co2_level_cached(co2);
-          CO2Level co_level  = get_co_level_cached(co);
-          Color co2_color = co2_level.color;
-          Color co_color  = co_level.color;
+          AirQualityLevel co2_level = get_co2_level_cached(co2);
+          AirQualityLevel co_level  = get_co_level_cached(co);
+          Color co2_color = get_level_color(co2_level.type);
+          Color co_color  = get_level_color(co_level.type);
           Color temp_color(255, 140, 60);
           Color hum_color(80, 190, 255);
           Color label_color(150, 150, 170);
