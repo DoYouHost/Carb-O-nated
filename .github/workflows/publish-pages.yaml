@@ -23,6 +23,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Load project config
+        id: cfg
+        uses: ./.github/actions/load-project-config
+
+      - name: Inject project name into Jekyll config
+        run: |
+          set -euo pipefail
+          PROJECT='${{ steps.cfg.outputs.project_name }}'
+          # Replace the title line with the value from project.yaml so Jekyll
+          # picks up the right page title without manual edits.
+          if [ -f static/_config.yaml ]; then
+            sed -i "s|^title:.*$|title: ESPHome ${PROJECT}|" static/_config.yaml
+            echo "Updated static/_config.yaml:"
+            cat static/_config.yaml
+          fi
+
       - run: mkdir -p output/firmware
 
       - name: Build

@@ -1,0 +1,48 @@
+name: Load Project Config
+description: Reads project.yaml from the repository root and exposes its values as outputs.
+
+outputs:
+  project_name:
+    description: Display / release name of the project.
+    value: ${{ steps.load.outputs.project_name }}
+  r2_directory:
+    description: Cloudflare R2 directory used by upload/promote/cleanup workflows.
+    value: ${{ steps.load.outputs.r2_directory }}
+  esphome_version:
+    description: ESPHome version used to build this project.
+    value: ${{ steps.load.outputs.esphome_version }}
+  files:
+    description: Newline-separated list of ESPHome YAML files to build.
+    value: ${{ steps.load.outputs.files }}
+  r2_cleanup_days:
+    description: Retention threshold (in days) for r2-cleanup.
+    value: ${{ steps.load.outputs.r2_cleanup_days }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read project.yaml
+      id: load
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ ! -f project.yaml ]; then
+          echo "::error::project.yaml not found in repository root"
+          exit 1
+        fi
+
+        # ubuntu-latest ships with yq pre-installed.
+        echo "project_name=$(yq '.project_name' project.yaml)" >> "$GITHUB_OUTPUT"
+        echo "r2_directory=$(yq '.r2_directory' project.yaml)" >> "$GITHUB_OUTPUT"
+        echo "esphome_version=$(yq '.esphome_version' project.yaml)" >> "$GITHUB_OUTPUT"
+        echo "r2_cleanup_days=$(yq '.r2_cleanup_days // 90' project.yaml)" >> "$GITHUB_OUTPUT"
+
+        {
+          echo 'files<<PROJECT_YAML_FILES_EOF'
+          yq '.files[]' project.yaml
+          echo 'PROJECT_YAML_FILES_EOF'
+        } >> "$GITHUB_OUTPUT"
+
+        echo "Loaded project.yaml:"
+        yq '.' project.yaml

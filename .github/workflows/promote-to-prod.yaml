@@ -25,7 +25,7 @@ jobs:
         id: check
         run: |
           SHOULD_PROMOTE="false"
-          
+
           # Determine version based on trigger type
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ inputs.version }}"
@@ -34,7 +34,7 @@ jobs:
             VERSION="${{ github.event.release.tag_name }}"
             echo "Release event - version: $VERSION"
           fi
-          
+
           # For manual dispatch, always promote if version is valid
           # For release events, check if it's not draft and not prerelease
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -48,28 +48,40 @@ jobs:
               echo "❌ Skipping promotion - release is draft or prerelease"
             fi
           fi
-          
+
           if [ "$RELEASE_CONDITIONS_MET" = "true" ]; then
             # Check if version follows semantic versioning pattern (YYYY.M.P)
-            if [[ "$VERSION" =~ ^[0-9]{4}\.[0-9]+\.[0-9]+$ ]]; then 
+            if [[ "$VERSION" =~ ^[0-9]{4}\.[0-9]+\.[0-9]+$ ]]; then
               SHOULD_PROMOTE="true"
               echo "✅ Will promote release $VERSION to production"
             else
               echo "❌ Version $VERSION does not follow expected pattern (YYYY.M.P)"
             fi
           fi
-          
+
           echo "should-promote=$SHOULD_PROMOTE" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+  load-config:
+    name: Load project config
+    runs-on: ubuntu-latest
+    needs: check-release
+    if: needs.check-release.outputs.should-promote == 'true'
+    outputs:
+      r2_directory: ${{ steps.cfg.outputs.r2_directory }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: cfg
+        uses: ./.github/actions/load-project-config
+
   promote-to-production:
     name: Promote to Production
-    needs: check-release
+    needs: [check-release, load-config]
     if: needs.check-release.outputs.should-promote == 'true'
     uses: DoYouHost/workflows/.github/workflows/promote-r2.yml@main
     with:
       version: "${{ needs.check-release.outputs.version }}"
-      directory: "Carb-O-nated"
+      directory: "${{ needs.load-config.outputs.r2_directory }}"
       channel: "production"
       manifest-filename: "manifest.json"
     secrets: inherit

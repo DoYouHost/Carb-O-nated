@@ -1,16 +1,30 @@
 name: R2 Cleanup
 
+# NOTE: cron is evaluated at workflow-parse time and cannot be sourced from
+# project.yaml. Adjust this schedule per project if 02:00 UTC Saturday is wrong.
 on:
   schedule:
-    - cron: '0 2 * * 0'  # Every day at 2 AM
+    - cron: '0 2 * * 6'  # Every Saturday at 02:00 UTC
   workflow_dispatch:
 
 jobs:
+  load-config:
+    runs-on: ubuntu-latest
+    name: Load project config
+    outputs:
+      r2_directory: ${{ steps.cfg.outputs.r2_directory }}
+      r2_cleanup_days: ${{ steps.cfg.outputs.r2_cleanup_days }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: cfg
+        uses: ./.github/actions/load-project-config
+
   cleanup:
+    needs: load-config
     uses: DoYouHost/workflows/.github/workflows/cleanup-r2.yml@main
     with:
-      directory: 'Carb-O-nated'
-      days_old: '90'
+      directory: ${{ needs.load-config.outputs.r2_directory }}
+      days_old: ${{ needs.load-config.outputs.r2_cleanup_days }}
     secrets:
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
       CF_ACCESS_KEY_ID: ${{ secrets.CF_ACCESS_KEY_ID }}
