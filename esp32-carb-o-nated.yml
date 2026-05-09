@@ -272,15 +272,15 @@ font:
   - file: "gfonts://Roboto@700"
     id: roboto_bold_25
     size: 25
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéè"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéèŁóśćŚĆÓäÄÉÈçñ"
   - file: "gfonts://Roboto@500"
     id: roboto_medium_20
     size: 20
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°₀₁₂₃₄₅₆₇₈₉łŁóśćŚĆÓäÄéèÉÈçñ"
   - file: "gfonts://Roboto@500"
     id: roboto_medium_12
     size: 12
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·°₀₁₂₃₄₅₆₇₈₉łéè"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·°₀₁₂₃₄₅₆₇₈₉łéèŁóśćŚĆÓäÄÉÈçñ"
   - file: "gfonts://Roboto@700"
     id: roboto_bold_48
     size: 48
@@ -288,11 +288,11 @@ font:
   - file: "gfonts://Roboto@700"
     id: roboto_bold_16
     size: 16
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéè"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°łéèŁóśćŚĆÓäÄÉÈçñ"
   - file: "gfonts://Roboto@500"
     id: roboto_medium_14
     size: 14
-    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·°₀₁₂₃₄₅₆₇₈₉łéè"
+    glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·°₀₁₂₃₄₅₆₇₈₉łéèŁóśćŚĆÓäÄÉÈçñ"
 
 display:
   - platform: mipi_spi
@@ -304,8 +304,6 @@ display:
     rotation: 270°
     data_rate: 80MHz
     update_interval: never
-    on_page_change:
-      - component.update: main_display
     pages:
       - id: main_page
         lambda: |-
