@@ -31,6 +31,8 @@ substitutions:
   MQ7_ANALOG_PIN: GPIO36
   MQ7_LOW_SIDE_RESISTOR: "1000"
   MQ7_HIGH_SIDE_RESISTOR: "470"
+  MQ7_TEMP_SENSOR_ID: scd4x_temperature
+  MQ7_HUM_SENSOR_ID: scd4x_humidity
 
 esphome:
   name: carb-o-nated
@@ -72,6 +74,16 @@ packages:
       - debug.yaml
       - updateBetaProdStaging.yaml
       - wifiInfo.yaml
+    ref: main
+    refresh: 0d
+  DoYouHost/Carb-O-nated-Common:
+    url: https://github.com/DoYouHost/Carb-O-nated-Common
+    files:
+      - scd41.yaml
+      - mq7.yaml
+      - buzzer.yaml
+      - ws2812b.yaml
+      - dashboard.yaml
     ref: main
     refresh: 0d
 
@@ -139,15 +151,6 @@ api:
   encryption:
     key: "${API_KEY}"
 
-  actions:
-    - action: set_ambient_pressure
-      variables:
-        pressure_mbar: int
-      then:
-        - script.execute:
-            id: buzzer_beep_short
-        - lambda: "id(co2_sensor)->set_ambient_pressure_compensation(pressure_mbar);"
-
 http_request:
   id: http_request_component
   follow_redirects: true
@@ -181,16 +184,6 @@ update:
     update_interval: never
 
 globals:
-  - id: temperature_offset
-    type: float
-    restore_value: true
-    initial_value: '0.0'
-
-  - id: humidity_offset
-    type: float
-    restore_value: true
-    initial_value: '0.0'
-
   - id: init_done
     type: bool
     restore_value: false
@@ -211,14 +204,6 @@ output:
     pin: ${PIN_DISPLAY_BACKLIGHT}
     id: output_display_backlight
 
-  - platform: gpio
-    pin: ${PIN_BUZZER}
-    id: output_buzzer
-
-  - platform: gpio
-    pin: ${MQ7_HEATER_PIN}
-    id: mq7_heater_pin
-
 light:
   - platform: monochromatic
     id: display_backlight
@@ -228,42 +213,7 @@ light:
     on_turn_on:
       - component.update: main_display
 
-  - platform: esp32_rmt_led_strip
-    rgb_order: GRB
-    pin: "${WS2812B_PIN}"
-    num_leds: "${WS2812B_COUNT}"
-    chipset: WS2812
-    id: led_strip
-    internal: true
-    max_refresh_rate: 16ms
-    effects:
-      - addressable_lambda:
-          name: "Wave"
-          update_interval: 16ms
-          lambda: |-
-            float t = fmodf(millis() / 1000.0f, 628.318f);
-            float max_b = id(led_strip_max_brightness).state / 100.0f;
-            AirQualityLevelType worst = worst_level({
-              get_co2_level_cached(id(scd4x_co2).state).type,
-              get_co_level_cached(id(mq7_co).state).type
-            });
-            Color aq = get_level_color(worst);
-            for (int i = 0; i < it.size(); i++) {
-              float b = (sinf(t * 2.0f + i * 2.094395f) * 0.35f + 0.65f) * max_b;
-              it[i] = Color(
-                (uint8_t)(aq.r * b),
-                (uint8_t)(aq.g * b),
-                (uint8_t)(aq.b * b)
-              );
-            }
-
 binary_sensor:
-  - platform: template
-    name: "MQ7 Heater"
-    icon: mdi:fire
-    entity_category: diagnostic
-    lambda: return id(mq7_heater).state;
-
   - platform: gpio
     id: button_a
     name: "Button A"
@@ -297,22 +247,8 @@ binary_sensor:
                 - component.update: main_display
 
 sensor:
-  - platform: scd4x
-    address: 0x62
-    id: co2_sensor
-    update_interval: 5s
-    automatic_self_calibration: true
-    # temperature_offset: 0
-    measurement_mode: periodic
+  - id: !extend co2_sensor
     co2:
-      name: "CO2 Concentration"
-      id: scd4x_co2
-      unit_of_measurement: "ppm"
-      filters:
-        - skip_initial: 12
-        - exponential_moving_average:
-            alpha: 0.3
-            send_every: 6
       on_value:
         then:
           - lambda: |-
@@ -321,248 +257,10 @@ sensor:
                 id(main_display).show_page(id(main_page));
               }
           - component.update: main_display
-    temperature:
-      id: scd4x_temperature
-      internal: true
-      unit_of_measurement: "°C"
-      filters:
-        - skip_initial: 12
-        - exponential_moving_average:
-            alpha: 0.3
-            send_every: 6
-    humidity:
-      id: scd4x_humidity
-      internal: true
-      unit_of_measurement: "%"
-      filters:
-        - skip_initial: 12
-        - exponential_moving_average:
-            alpha: 0.3
-            send_every: 6
 
-  - platform: copy
-    source_id: scd4x_temperature
-    id: scd4x_temperature_copy
-    name: "SCD4x Temperature"
-    filters:
-      - lambda: |-
-          return x + id(temperature_offset);
-
-  - platform: copy
-    source_id: scd4x_humidity
-    id: scd4x_humidity_copy
-    name: "SCD4x Humidity"
-    filters:
-      - lambda: |-
-          return x + id(humidity_offset);
-
-  - platform: adc
-    id: mq7_raw
-    name: "MQ7 Voltage"
-    entity_category: diagnostic
-    disabled_by_default: true
-    pin: ${MQ7_ANALOG_PIN}
-    attenuation: auto
-    update_interval: never
-    filters:
-      - sliding_window_moving_average:
-          window_size: 5
-          send_every: 5
-
-  - platform: resistance
-    id: mq7_resistance
-    name: "MQ7 Resistance"
-    icon: mdi:omega
-    entity_category: diagnostic
-    disabled_by_default: true
-    sensor: mq7_raw
-    configuration: UPSTREAM
-    resistor: ${MQ7_LOW_SIDE_RESISTOR}
-    reference_voltage: 5.0V
-    filters:
-      - lambda: return (x - ${MQ7_HIGH_SIDE_RESISTOR});
-    on_value:
-      then:
-        - component.update: mq7_compensated_resistance
-
-  - platform: template
-    id: mq7_compensated_resistance
-    name: "MQ7 Compensated Resistance"
-    icon: mdi:omega
-    entity_category: diagnostic
-    unit_of_measurement: Ω
-    lambda: |-
-      return (id(mq7_resistance).state / ( -0.01223333 * id(scd4x_temperature).state -0.00609615 * id(scd4x_humidity).state + 1.70860897));
-    update_interval: never
-    on_value:
-      then:
-        - component.update: mq7_ratio
-
-  - platform: template
-    id: mq7_ratio
-    name: "MQ7 Ratio"
-    icon: mdi:percent
-    entity_category: diagnostic
-    disabled_by_default: true
-    unit_of_measurement: "%"
-    lambda: |-
-      return 100.0 * (id(mq7_compensated_resistance).state / id(mq7_clean_air_compensated_resistance).state);
-    update_interval: never
-    on_value:
-      then:
-        - component.update: mq7_co
-
-  - platform: template
-    id: mq7_co
-    name: "CO Concentration"
-    unit_of_measurement: "ppm"
-    device_class: carbon_monoxide
-    lambda: |-
-      float ratio = id(mq7_ratio).state;
-      if (isnan(ratio) || ratio <= 0.0f) return NAN;
-      auto ratio_ln = log(ratio / 100.0);
-      float result = exp(-0.685204 - 2.67936 * ratio_ln - 0.488075 * ratio_ln * ratio_ln - 0.07818 * ratio_ln * ratio_ln * ratio_ln);
-      if (isnan(result) || result < 0.0f) return NAN;
-      return result;
-    update_interval: never
+  - id: !extend mq7_co
     on_value:
       - component.update: main_display
-
-text_sensor:
-  - platform: template
-    name: "CO2 Air Quality Level"
-    id: co2_level_text
-    icon: "mdi:molecule-co2"
-    update_interval: 60s
-    lambda: |-
-      AirQualityLevel level = get_co2_level_cached(id(scd4x_co2).state);
-      return {get_aq_label_en(level.type)};
-
-  - platform: template
-    name: "CO Air Quality Level"
-    id: co_level_text
-    icon: "mdi:molecule-co"
-    update_interval: 60s
-    lambda: |-
-      AirQualityLevel level = get_co_level_cached(id(mq7_co).state);
-      return {get_aq_label_en(level.type)};
-
-  - platform: template
-    name: "Air Quality Level"
-    id: air_quality_level_text
-    icon: "mdi:air-filter"
-    update_interval: 60s
-    lambda: |-
-      AirQualityLevelType worst = worst_level({
-        get_co2_level_cached(id(scd4x_co2).state).type,
-        get_co_level_cached(id(mq7_co).state).type
-      });
-      return {get_aq_label_en(worst)};
-
-select:
-  - platform: template
-    name: "Dashboard Language"
-    id: dashboard_language
-    icon: "mdi:translate"
-    optimistic: true
-    options:
-      - "English"
-      - "Polski"
-      - "Deutsch"
-      - "Français"
-      - "Español"
-    initial_option: "English"
-    restore_value: true
-    on_value:
-      then:
-        - lambda: |-
-            int lang_map[] = {0, 1, 2, 3, 4};
-            if (x == "English") current_language = LANG_EN;
-            else if (x == "Polski") current_language = LANG_PL;
-            else if (x == "Deutsch") current_language = LANG_DE;
-            else if (x == "Français") current_language = LANG_FR;
-            else if (x == "Español") current_language = LANG_ES;
-        - component.update: main_display
-
-number:
-  - platform: template
-    name: "MQ7 Clean Air Resistance"
-    id: mq7_clean_air_compensated_resistance
-    icon: mdi:omega
-    entity_category: config
-    unit_of_measurement: Ω
-    min_value: 1000
-    max_value: 500000
-    step: 100
-    initial_value: 55000
-    optimistic: true
-    restore_value: true
-
-  - platform: template
-    name: "Temperature Offset"
-    id: temperature_offset_number
-    icon: "mdi:thermometer"
-    unit_of_measurement: "°C"
-    step: 0.1
-    min_value: -10.0
-    max_value: 10.0
-    initial_value: 0.0
-    mode: box
-    restore_value: true
-    optimistic: true
-    on_value:
-      then:
-        - lambda: |-
-            id(temperature_offset) = x;
-
-  - platform: template
-    name: "LED Strip Max Brightness"
-    id: led_strip_max_brightness
-    icon: "mdi:brightness-percent"
-    unit_of_measurement: "%"
-    min_value: 0
-    max_value: 100
-    step: 1
-    initial_value: 100
-    mode: slider
-    optimistic: true
-    restore_value: true
-
-  - platform: template
-    name: "Humidity Offset"
-    id: humidity_offset_number
-    icon: "mdi:water-percent"
-    unit_of_measurement: "%"
-    step: 0.1
-    min_value: -20.0
-    max_value: 20.0
-    mode: box
-    initial_value: 0.0
-    restore_value: true
-    optimistic: true
-    on_value:
-      then:
-        - lambda: |-
-            id(humidity_offset) = x;
-
-datetime:
-  - platform: template
-    id: light_on_time
-    name: "Light On Time"
-    icon: "mdi:weather-sunset-up"
-    type: time
-    optimistic: true
-    restore_value: true
-    initial_value: "07:00:00"
-
-  - platform: template
-    id: light_off_time
-    name: "Light Off Time"
-    icon: "mdi:weather-sunset-down"
-    type: time
-    optimistic: true
-    restore_value: true
-    initial_value: "22:00:00"
 
 font:
   - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
@@ -611,7 +309,7 @@ display:
     pages:
       - id: main_page
         lambda: |-
-          if (!id(display_backlight).current_values.is_on()) return;
+          if (!id(display_backlight).remote_values.is_on()) return;
           float co2 = id(scd4x_co2).state;
           float co  = id(mq7_co).state;
 
@@ -682,7 +380,7 @@ display:
 
       - id: info_page
         lambda: |-
-          if (!id(display_backlight).current_values.is_on()) return;
+          if (!id(display_backlight).remote_values.is_on()) return;
           float co2  = id(scd4x_co2).state;
           float co   = id(mq7_co).state;
           float temp = id(scd4x_temperature_copy).state;
@@ -801,88 +499,13 @@ button:
     name: "Safe Mode"
   - platform: factory_reset
     name: "Factory Reset"
-  - platform: template
-    name: "SCD4x Factory Reset"
-    entity_category: config
-    icon: "mdi:restart-alert"
-    on_press:
-      - then:
-          - logger.log: "Performing SCD4x Factory Reset"
-          - scd4x.factory_reset: co2_sensor
 
 status_led:
   pin:
     number: ${PIN_STATUS_LED}
     inverted: false
 
-interval:
-  - interval: 150s
-    then:
-      - switch.turn_on: mq7_heater
-      - delay: 55s
-      - switch.turn_off: mq7_heater
-      - delay: 90s
-      - repeat:
-          count: 5
-          then:
-            - component.update: mq7_raw
-            - delay: 20ms
-
-script:
-  - id: startup_buzzer
-    then:
-      - output.turn_on: output_buzzer
-      - delay: 100ms
-      - output.turn_off: output_buzzer
-      - delay: 200ms
-      - output.turn_on: output_buzzer
-      - delay: 100ms
-      - output.turn_off: output_buzzer
-  
-  - id: buzzer_beep_short
-    then:
-      - if:
-          condition:
-            switch.is_on: switch_buzzer_confirmation
-          then:
-            - output.turn_on: output_buzzer
-            - delay: 50ms
-            - output.turn_off: output_buzzer
-
 switch:
-  - platform: template
-    name: "LED Strip"
-    id: switch_led_strip
-    icon: "mdi:led-strip"
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-    turn_on_action:
-      - lambda: |-
-          auto call = id(led_strip).turn_on();
-          call.set_effect("Wave");
-          call.perform();
-    turn_off_action:
-      - light.turn_off: led_strip
-
-  - platform: output
-    id: mq7_heater
-    internal: true
-    output: mq7_heater_pin
-
-  - platform: template
-    id: switch_buzzer_confirmation
-    name: "Buzzer Confirmation"
-    icon: "mdi:bullhorn"
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_ON
-
-  - platform: template
-    id: switch_led_strip_auto
-    name: "LED Strip Auto"
-    icon: "mdi:led-strip-variant"
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-
   - platform: template
     id: switch_backlight_auto
     name: "Display Backlight Auto"
@@ -890,13 +513,3 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
 
-  - platform: template
-    id: switch_buzzer
-    name: "Buzzer"
-    icon: "mdi:volume-high"
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-    turn_on_action:
-      - output.turn_on: output_buzzer
-    turn_off_action:
-      - output.turn_off: output_buzzer
