@@ -1,5 +1,10 @@
 
 # 2026.5
+## .4
+- feat: update to ESPHome 2026.4.5
+- fix: blank screen after backlight re-enable — page lambdas now check `remote_values` instead of `current_values`
+- fix: eliminate double render on page change by removing `on_page_change` component.update
+- fix: add missing diacritical glyphs for PL/DE/FR/ES to all text-rendering fonts
 ## .3
 - feat: move to Carb-O-nated-Common repo for shared assets and code
 ## .2

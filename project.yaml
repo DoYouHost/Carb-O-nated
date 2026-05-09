@@ -1,6 +1,6 @@
 project_name: Carb-O-nated
 r2_directory: Carb-O-nated
-esphome_version: "2026.4.4"
+esphome_version: "2026.4.5"
 files:
   - esp32-carb-o-nated.yml
 r2_cleanup_days: 90
