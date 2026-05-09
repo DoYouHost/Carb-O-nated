@@ -269,6 +269,12 @@ font:
     glyphs:
       - "\U000F0026"  # mdi:alert
 
+  - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
+    id: mdi_icon_16
+    size: 16
+    glyphs:
+      - "\U000F0238"  # mdi:fire
+
   - file: "gfonts://Roboto@700"
     id: roboto_bold_25
     size: 25
@@ -341,6 +347,10 @@ display:
           it.filled_circle(20, 13, 4, overall_color);
           it.print(28, 13, id(roboto_bold_16), overall_color,
             TextAlign::CENTER_LEFT, overall_text);
+          if (id(mq7_heater).state) {
+            it.print(234, 13, id(mdi_icon_16), Color(255, 100, 30),
+              TextAlign::CENTER_RIGHT, "\U000F0238");
+          }
 
           // ── CO₂ MAIN (y=26 to y=94) ──
           if (isnan(co2)) {
@@ -504,6 +514,13 @@ status_led:
     inverted: false
 
 switch:
+  - platform: output
+    id: !extend mq7_heater
+    on_turn_on:
+      - component.update: main_display
+    on_turn_off:
+      - component.update: main_display
+
   - platform: template
     id: switch_backlight_auto
     name: "Display Backlight Auto"
@@ -511,3 +528,9 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
 
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+
+bluetooth_proxy:
+  active: true

@@ -1,5 +1,8 @@
 
 # 2026.5
+## .5
+- feat: show mdi:fire icon in display header when MQ-7 heater is active
+- feat: add Bluetooth proxy with active BLE scanning
 ## .4
 - feat: update to ESPHome 2026.4.5
 - fix: blank screen after backlight re-enable — page lambdas now check `remote_values` instead of `current_values`
